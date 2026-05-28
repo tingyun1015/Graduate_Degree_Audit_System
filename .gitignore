@@ -1,8 +1,7 @@
 __pycache__/
 *.pyc
 
-# oh-my-claudecode 工具暫存
+
 .omc/
 
-# 前端規劃文件放 Notion，本機保留即可
-frontend/docs/
+
