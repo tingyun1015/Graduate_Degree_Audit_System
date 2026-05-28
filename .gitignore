@@ -1,2 +1,11 @@
+# Python
 __pycache__/
 *.pyc
+
+# Frontend
+frontend/node_modules/
+frontend/.vite/
+frontend/dist/
+
+# System
+.DS_Store

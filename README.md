@@ -31,6 +31,9 @@ docker compose up --build -d backend
 
 # 4. 匯入 dashboard 測試資料
 docker exec -i graduate_audit_db psql -U postgres -d graduate_audit < scripts/seed_dashboard_test.sql
+
+# 5. 啟動前端
+docker compose up -d frontend
 ```
 
 ## get schema
@@ -161,3 +164,19 @@ Additional constraint:
 - `GET /health`
 - `POST /api/login`
 - `GET /api/student/dashboard-all?student_id=42`
+
+
+## Frontend
+
+### Setup
+1. Run frontend container only:
+```bash
+docker compose up -d --no-deps frontend
+```
+2. Access `http://localhost:5173` in browser
+
+### Structure
+- `frontend/src/`
+  - `pages/`: Contains all application pages. Each page has its own directory with its respective `Page.tsx` and styles.
+  - `components/`: Contains reusable UI components.
+  - `App.tsx`: Main application component, which handles the routing configuration.
