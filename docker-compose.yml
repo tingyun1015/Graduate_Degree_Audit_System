@@ -28,5 +28,20 @@ services:
       db:
         condition: service_healthy
 
+  db-init:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/graduate_audit
+    command:
+      [
+        "python",
+        "-c",
+        "from app.database import Base, engine; import app.models; Base.metadata.create_all(bind=engine)",
+      ]
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   postgres_data:

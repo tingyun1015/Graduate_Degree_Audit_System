@@ -41,6 +41,7 @@ class User(Base):
 
     user_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
+    password_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     # "student" | "staff"  – mirrors the IS-A specialisation in the ER diagram
     role: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
