@@ -1,6 +1,76 @@
 from pydantic import BaseModel
 
 
+# ── Audit ─────────────────────────────────────────────────────────────────────
+
+class MissingCourseResponse(BaseModel):
+    course_id: int
+    course_code: str
+    course_name: str
+    credits: int
+
+
+class AuditRuleResponse(BaseModel):
+    rule_id: int
+    rule_name: str
+    rule_type: str
+    required_credits: int
+    earned_credits: int
+    remaining_credits: int
+
+
+class AuditProgramResponse(BaseModel):
+    program_id: int
+    program_name: str
+    program_type: str | None
+    can_graduate: bool
+    rules: list[AuditRuleResponse]
+    missing_courses: list[MissingCourseResponse]
+
+
+class StudentAuditResponse(BaseModel):
+    student_id: int
+    can_graduate: bool
+    programs: list[AuditProgramResponse]
+
+
+# ── Credits summary ────────────────────────────────────────────────────────────
+
+class CreditsSummaryResponse(BaseModel):
+    required: int
+    elective: int
+    general_education: int
+    total: int
+
+
+# ── Courses taken ──────────────────────────────────────────────────────────────
+
+class CourseRecordResponse(BaseModel):
+    course_id: int
+    course_code: str
+    course_name: str
+    credits: int
+    semester: str
+    grade: int | None
+    is_passed: bool
+
+
+# ── Enrollments ────────────────────────────────────────────────────────────────
+
+class EnrollmentItemResponse(BaseModel):
+    program_id: int
+    program_name: str
+    program_type: str | None
+    is_enrolled: bool
+
+
+class EnrollmentCreateRequest(BaseModel):
+    student_id: int
+    program_id: int
+
+
+# ── Dashboard (existing) ───────────────────────────────────────────────────────
+
 class StudentInfoResponse(BaseModel):
     degree_type: str
     enrollment_semester: str

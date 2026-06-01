@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session, selectinload
 
-from .models import Enrollment, Program, RequirementRule, Student, Takes
+from .models import CourseRule, Enrollment, Program, RequirementRule, Student, Takes
 from .student_dashboard import (
     choose_primary_program,
     is_university_program,
@@ -21,6 +21,22 @@ def get_student_with_related_data(db: Session, student_id: int) -> Student | Non
             .selectinload(Enrollment.program)
             .selectinload(Program.requirement_rules)
             .selectinload(RequirementRule.course_rules),
+        )
+        .filter(Student.student_id == student_id)
+        .first()
+    )
+
+
+def get_student_with_audit_data(db: Session, student_id: int) -> Student | None:
+    return (
+        db.query(Student)
+        .options(
+            selectinload(Student.takes).selectinload(Takes.course),
+            selectinload(Student.enrollments)
+            .selectinload(Enrollment.program)
+            .selectinload(Program.requirement_rules)
+            .selectinload(RequirementRule.course_rules)
+            .selectinload(CourseRule.course),
         )
         .filter(Student.student_id == student_id)
         .first()

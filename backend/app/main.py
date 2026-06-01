@@ -17,7 +17,7 @@ from .models import (  # noqa: F401
     Takes,
     CourseRule,
 )
-from .routers import auth, student
+from .routers import admin, auth, courses, departments, programs, student
 
 app = FastAPI(
     title="Graduate Degree Audit System API",
@@ -35,6 +35,10 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(student.router)
+app.include_router(courses.router)
+app.include_router(programs.router)
+app.include_router(departments.router)
+app.include_router(admin.router)
 
 
 @app.on_event("startup")
