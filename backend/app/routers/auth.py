@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -46,3 +46,33 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         name=user_name,
         role=user.role,
     )
+
+
+@router.post("/logout")
+def logout():
+    return {"success": True, "message": "登出成功"}
+
+
+@router.get("/me")
+def get_me(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.role == "student" and user.student:
+        name = user.student.name
+        profile_id = user.student.student_id
+    elif user.role == "staff" and user.staff:
+        name = user.staff.name
+        profile_id = user.staff.staff_id
+    else:
+        name = None
+        profile_id = user.user_id
+
+    return {
+        "user_id": user.user_id,
+        "email": user.email,
+        "role": user.role,
+        "name": name,
+        "id": profile_id,
+    }
