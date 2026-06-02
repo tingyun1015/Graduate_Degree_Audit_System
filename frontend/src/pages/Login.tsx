@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logoImg from '../assets/logo.svg';
+import Logo from '../components/Logo';
 import Tag from '../components/Tag';
 import Button from '../components/Button';
 import { loginUser } from '../api';
@@ -40,7 +40,7 @@ export default function Login() {
         {/* Header / Logo Area */}
         <div className="flex flex-col items-center gap-[9px] mb-[30px]">
           <Tag content="Student" color="#ffb6b0" />
-          <img src={logoImg} alt="Degree Audit Logo" />
+          <Logo />
         </div>
 
         {/* Form Area */}

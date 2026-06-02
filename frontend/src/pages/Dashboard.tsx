@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getDashboard } from '../api';
 import type { Dashboard, Program } from '../types';
+import Header from '../components/Header';
 
 // ─────────────────────────────────────────────
 // 小工具:算出單一 program 的 earned / required 總和
@@ -125,20 +126,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#fff8ef] flex flex-col">
-
-      {/* ① 頂部導覽列 */}
-      <header className="bg-[#1f3a5f] text-white flex items-center justify-between px-8 h-16 shrink-0">
-        <div className="flex items-center gap-2 font-bold text-lg">
-          <span>✦</span>
-          <span>Degree Audit</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="font-medium">{userName}</span>
-          <div className="w-9 h-9 rounded-full bg-white text-[#1f3a5f] flex items-center justify-center font-bold">
-            {userName.charAt(0)}
-          </div>
-        </div>
-      </header>
+      <Header userName={userName} />
 
       {/* 主內容區(置中、限制最大寬度) */}
       <main className="flex-1 w-full max-w-[1120px] mx-auto px-6 py-8 flex flex-col gap-6">
