@@ -2,10 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-<<<<<<< Updated upstream
 from ..models import Enrollment, Program, Student
-=======
->>>>>>> Stashed changes
 from ..student_dashboard import (
     calculate_current_gpa,
     calculate_current_year_label,
@@ -17,7 +14,6 @@ from ..student_dashboard import (
     normalize_degree_type,
 )
 from ..student_schemas import (
-<<<<<<< Updated upstream
     AuditProgramResponse,
     AuditRuleResponse,
     CourseRecordResponse,
@@ -27,27 +23,17 @@ from ..student_schemas import (
     EnrollmentItemResponse,
     MissingCourseResponse,
     StudentAuditResponse,
-=======
-    CourseRecordResponse,
-    DashboardProgramResponse,
-    StudentAuditResponse,
-    StudentCoursesResponse,
->>>>>>> Stashed changes
     StudentDashboardAllResponse,
     StudentInfoResponse,
 )
 from ..student_service import (
-    build_audit_programs,
     build_program_sub_rules,
     get_active_programs,
     get_primary_program,
-<<<<<<< Updated upstream
-    get_student_with_audit_data,
-=======
     get_student_for_audit,
     get_student_for_courses,
->>>>>>> Stashed changes
     get_student_with_related_data,
+    sum_earned_credits_for_course_ids,
 )
 
 router = APIRouter(prefix="/api/v1/students", tags=["Student"])
@@ -60,13 +46,9 @@ def get_student_or_404(db, student_id: int, loader=get_student_with_related_data
     return student
 
 
-<<<<<<< Updated upstream
 # ── Dashboard ──────────────────────────────────────────────────────────────────
 
-@router.get("/dashboard-all", response_model=StudentDashboardAllResponse)
-=======
 @router.get("/{student_id}/dashboard-all", response_model=StudentDashboardAllResponse)
->>>>>>> Stashed changes
 def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
     student = get_student_or_404(db, student_id)
     active_programs = get_active_programs(student)
@@ -122,17 +104,13 @@ def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
     )
 
 
-<<<<<<< Updated upstream
 # ── Audit ──────────────────────────────────────────────────────────────────────
 
-@router.get("/audit", response_model=StudentAuditResponse)
+@router.get("/{student_id}/audit", response_model=StudentAuditResponse)
 def get_student_audit(
     student_id: int, dept_id: int | None = None, db: Session = Depends(get_db)
 ):
-    student = get_student_with_audit_data(db, student_id)
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
-
+    student = get_student_or_404(db, student_id, loader=get_student_for_audit)
     passed_course_credits = get_passed_course_credits(student)
     passed_course_ids = set(passed_course_credits.keys())
     active_programs = get_active_programs(student)
@@ -150,11 +128,7 @@ def get_student_audit(
 
         for rule in program.requirement_rules:
             rule_course_ids = {cr.course_id for cr in rule.course_rules}
-            earned = sum(
-                credits
-                for course_id, credits in passed_course_credits.items()
-                if course_id in rule_course_ids
-            )
+            earned = sum_earned_credits_for_course_ids(passed_course_credits, rule_course_ids)
             remaining = max(0, rule.required_credits - earned)
 
             if remaining > 0:
@@ -206,7 +180,7 @@ def get_student_audit(
 
 # ── Credits summary ────────────────────────────────────────────────────────────
 
-@router.get("/credits/summary", response_model=CreditsSummaryResponse)
+@router.get("/{student_id}/credits/summary", response_model=CreditsSummaryResponse)
 def get_credits_summary(student_id: int, db: Session = Depends(get_db)):
     student = get_student_or_404(db, student_id)
     passed_course_credits = get_passed_course_credits(student)
@@ -219,11 +193,7 @@ def get_credits_summary(student_id: int, db: Session = Depends(get_db)):
     for program in active_programs:
         for rule in program.requirement_rules:
             rule_course_ids = {cr.course_id for cr in rule.course_rules}
-            earned = sum(
-                credits
-                for course_id, credits in passed_course_credits.items()
-                if course_id in rule_course_ids
-            )
+            earned = sum_earned_credits_for_course_ids(passed_course_credits, rule_course_ids)
             if is_university_program(program):
                 general_education += earned
             elif rule.rule_type == "required":
@@ -241,21 +211,12 @@ def get_credits_summary(student_id: int, db: Session = Depends(get_db)):
 
 # ── Courses taken ──────────────────────────────────────────────────────────────
 
-@router.get("/courses", response_model=list[CourseRecordResponse])
+@router.get("/{student_id}/courses", response_model=list[CourseRecordResponse])
 def get_student_courses(student_id: int, db: Session = Depends(get_db)):
-    student = get_student_or_404(db, student_id)
+    student = get_student_or_404(db, student_id, loader=get_student_for_courses)
     return [
         CourseRecordResponse(
             course_id=take.course.course_id,
-=======
-@router.get("/{student_id}/courses", response_model=StudentCoursesResponse)
-def get_student_courses(student_id: int, db: Session = Depends(get_db)):
-    student = get_student_or_404(db, student_id, loader=get_student_for_courses)
-
-    courses = [
-        CourseRecordResponse(
-            take_id=take.take_id,
->>>>>>> Stashed changes
             course_code=take.course.course_code,
             course_name=take.course.course_name,
             credits=take.course.credits,
@@ -264,14 +225,13 @@ def get_student_courses(student_id: int, db: Session = Depends(get_db)):
             is_passed=take.is_passed,
         )
         for take in student.takes
-<<<<<<< Updated upstream
         if take.course
     ]
 
 
 # ── Enrollments ────────────────────────────────────────────────────────────────
 
-@router.get("/enrollments", response_model=list[EnrollmentItemResponse])
+@router.get("/{student_id}/enrollments", response_model=list[EnrollmentItemResponse])
 def get_student_enrollments(student_id: int, db: Session = Depends(get_db)):
     student = get_student_or_404(db, student_id)
     return [
@@ -286,9 +246,9 @@ def get_student_enrollments(student_id: int, db: Session = Depends(get_db)):
     ]
 
 
-@router.post("/enrollments", response_model=EnrollmentItemResponse, status_code=201)
-def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_db)):
-    student = db.query(Student).filter(Student.student_id == payload.student_id).first()
+@router.post("/{student_id}/enrollments", response_model=EnrollmentItemResponse, status_code=201)
+def add_enrollment(student_id: int, payload: EnrollmentCreateRequest, db: Session = Depends(get_db)):
+    student = db.query(Student).filter(Student.student_id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
@@ -299,7 +259,7 @@ def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_d
     existing = (
         db.query(Enrollment)
         .filter(
-            Enrollment.student_id == payload.student_id,
+            Enrollment.student_id == student_id,
             Enrollment.program_id == payload.program_id,
         )
         .first()
@@ -311,7 +271,7 @@ def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_d
         db.commit()
     else:
         db.add(Enrollment(
-            student_id=payload.student_id,
+            student_id=student_id,
             program_id=payload.program_id,
             is_enrolled=True,
         ))
@@ -325,8 +285,8 @@ def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_d
     )
 
 
-@router.delete("/enrollments/{program_id}")
-def remove_enrollment(program_id: int, student_id: int, db: Session = Depends(get_db)):
+@router.delete("/{student_id}/enrollments/{program_id}")
+def remove_enrollment(student_id: int, program_id: int, db: Session = Depends(get_db)):
     enrollment = (
         db.query(Enrollment)
         .filter(
@@ -341,17 +301,3 @@ def remove_enrollment(program_id: int, student_id: int, db: Session = Depends(ge
     enrollment.is_enrolled = False
     db.commit()
     return {"success": True, "message": "已退出 Program"}
-=======
-    ]
-
-    return StudentCoursesResponse(student_id=student_id, courses=courses)
-
-
-@router.get("/{student_id}/audit", response_model=StudentAuditResponse)
-def get_student_audit(student_id: int, db: Session = Depends(get_db)):
-    student = get_student_or_404(db, student_id, loader=get_student_for_audit)
-    active_programs = get_active_programs(student)
-    programs = build_audit_programs(student, active_programs)
-
-    return StudentAuditResponse(student_id=student_id, programs=programs)
->>>>>>> Stashed changes
