@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { getDashboard } from '../api';
 import type { Dashboard, Program } from '../types';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
+import Tag from '../components/Tag';
 
 // ─────────────────────────────────────────────
 // 小工具:算出單一 program 的 earned / required 總和
@@ -54,22 +56,6 @@ function ProgressRing({ earned, required }: { earned: number; required: number }
         {earned}/{required}
       </span>
     </div>
-  );
-}
-
-// ─────────────────────────────────────────────
-// 小元件:學程類型標籤(Main Major 紅 / Minor 藍)
-// ─────────────────────────────────────────────
-function ProgramTag({ type }: { type: string }) {
-  const isMain = type === 'Main Major';
-  return (
-    <span
-      className={`inline-block text-[11px] font-semibold px-2 py-0.5 rounded ${
-        isMain ? 'bg-[#ffece9] text-[#c0392b]' : 'bg-[#e8edf7] text-[#2854c5]'
-      }`}
-    >
-      {isMain ? '★ Main Major' : type}
-    </span>
   );
 }
 
@@ -207,7 +193,11 @@ export default function Dashboard() {
           >
             {/* 左:標籤 + 名稱 + 學院 */}
             <div className="w-[260px] shrink-0">
-              <ProgramTag type={program.program_type ?? ''} />
+              <Tag 
+                content={`★ ${program.program_type ?? ''}`} 
+                color="#ffece9" 
+                textColor="#c0392b"
+              />
               <h4 className="text-[#1f3a5f] font-bold mt-2">{program.program_name}</h4>
               {program.college_name && (
                 <p className="text-xs text-gray-500 mt-0.5">{program.college_name}</p>
@@ -247,7 +237,11 @@ export default function Dashboard() {
                   className="bg-white border border-[#e5e0d8] rounded-lg px-6 py-5 flex items-center gap-5"
                 >
                   <div className="flex-1">
-                    <ProgramTag type={program.program_type ?? ''} />
+                    <Tag 
+                      content={program.program_type ?? ''} 
+                      color="#e8edf7" 
+                      textColor="#2854c5"
+                    />
                     <h4 className="text-[#1f3a5f] font-bold mt-2">{program.program_name}</h4>
                     {program.college_name && (
                       <p className="text-xs text-gray-500 mt-0.5">{program.college_name}</p>
@@ -267,11 +261,7 @@ export default function Dashboard() {
         </section>
 
       </main>
-
-      {/* 頁尾 */}
-      <footer className="text-center text-[10.5px] text-gray-400 py-3 shrink-0">
-        v0.1 · NCCU DBMS Group 8
-      </footer>
+      <Footer />
     </div>
   );
 }

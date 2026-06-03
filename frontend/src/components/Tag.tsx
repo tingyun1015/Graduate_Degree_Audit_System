@@ -1,14 +1,22 @@
+import React from 'react';
+
 interface TagProps {
-    content: string;
+    content: React.ReactNode;
     color?: string;
+    textColor?: string;
 }
 
-export default function Tag({ content, color = "#ffb6b0" }: TagProps){
+export default function Tag({ 
+    content, 
+    color = "#ffb6b0", 
+    textColor = "#000000"
+}: TagProps) {
     return (
-        <div 
-            style={{ backgroundColor: color }}
-            className={`text-black text-[10px] px-[5px] py-[3px] rounded-[3px] leading-none`}>
+        <span 
+            style={{ backgroundColor: color, color: textColor }}
+            className={`inline-flex items-center leading-none px-[5px] py-[3px] text-[10px] rounded-[3px]`}
+        >
             {content}
-        </div>
-    )
+        </span>
+    );
 }
