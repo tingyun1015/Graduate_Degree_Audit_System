@@ -41,3 +41,60 @@ export interface LoginResponse {
   name: string;
   role: string;
 }
+
+
+// Admin Pages
+
+export interface DepartmentInfo {
+  id: number;
+  name: string;
+  college_name: string;
+}
+
+export interface AdminLoginResponse {
+  success: boolean;
+  message: string;
+  id: number;
+  name: string;
+  departmentList: DepartmentInfo[];
+}
+
+export interface ProgramInfo {
+  id: number;
+  type: string;
+  title: string;
+  college: string;
+}
+
+export interface AdminProgramListResponse {
+  success: boolean;
+  message: string;
+  data: {
+    programs: ProgramInfo[];
+  }
+}
+
+export interface ProgramDetailResponse {
+  success: boolean;
+  message: string;
+  data: {
+    program: ProgramInfo;
+    rules: ProgramRule[];
+  }
+}
+
+export interface ProgramRule {
+  type: 'core' | 'elective' | 'free_elective';
+  name: string;
+  courses?: Course[];
+  requiredCredits?: number;
+}
+  
+
+export interface Course {
+  id: number;
+  code: string;
+  name: string;
+  credit: number;
+}
+  

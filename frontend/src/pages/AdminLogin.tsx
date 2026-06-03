@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import Tag from '../components/Tag';
 import Button from '../components/Button';
-import { loginUser } from '../api';
+import { loginAdmin } from '../api';
 import { LoginState } from '../types';
 
 const initialState: LoginState = {
@@ -13,7 +13,7 @@ const initialState: LoginState = {
   password: "",
 };
 
-export default function Login() {
+export default function AdminLogin() {
   const navigate = useNavigate();
 
   async function login(previousState: LoginState, formData: FormData): Promise<LoginState> {
@@ -25,13 +25,14 @@ export default function Login() {
     }
 
     try {
-      const result = await loginUser(account, password);
+      const result = await loginAdmin(account, password);
 
       if (result.success) {
         // TODO: 登入成功把使用者資訊存進瀏覽器的 localStorage
-        localStorage.setItem('student_id', String(result.id));
+        localStorage.setItem('admin_id', String(result.id));
         localStorage.setItem('user_name', result.name || "");
-        navigate("/dashboard");
+        localStorage.setItem('department_list', JSON.stringify(result.departmentList));
+        navigate("/admin/program");
         return { success: true, message: "登入成功", account, password };
       }
       return { success: false, message: result.message || "登入失敗", account, password };
@@ -46,7 +47,7 @@ export default function Login() {
     <div className="min-h-screen bg-[#fff8ef] flex flex-col items-center justify-center font-sans p-4">
       <div className="bg-white border border-[#ccc] shadow-[3px_4px_3px_rgba(0,0,0,0.06)] rounded-[4px] w-full max-w-[494px] px-[40px] py-[55px] flex flex-col items-center">
         <div className="flex flex-col items-center gap-[9px] mb-[30px]">
-          <Tag content="Student" color="#ffb6b0" />
+          <Tag content="Admin/Staff" color="#ffb6b0" />
           <Logo />
         </div>
 

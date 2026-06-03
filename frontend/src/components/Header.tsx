@@ -6,7 +6,7 @@ interface HeaderProps {
 
 export default function Header({ userName }: HeaderProps) {
     return (
-        <header className="bg-[#1f3a5f] text-white flex items-center justify-between px-8 h-16 shrink-0">
+        <header className="bg-[#1f3a5f] text-white flex items-center justify-between px-8 h-16 shrink-0 sticky top-0 z-50">
             <div className="flex items-center gap-2 font-bold text-lg">
                 <Logo className="text-white fill-current" />
             </div>
