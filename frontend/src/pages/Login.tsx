@@ -1,78 +1,84 @@
-import React, { useState } from 'react';
+import React, { useActionState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo';
 import Tag from '../components/Tag';
 import Button from '../components/Button';
 import { loginUser } from '../api';
+import { LoginState } from '../types';
+
+const initialState: LoginState = {
+  success: false,
+  message: "",
+  account: "",
+  password: "",
+};
 
 export default function Login() {
-  const [account, setAccount] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');     // 登入失敗時要顯示的訊息
-  const navigate = useNavigate();              // react-router 提供的「跳轉頁面」工具
+  const navigate = useNavigate();
 
-  // async:因為裡面要 await 等後端回應
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();   // 擋掉瀏覽器預設的「送出表單會重新整理頁面」
-    setError('');         // 每次重新嘗試先清空舊的錯誤訊息
+  async function login(previousState: LoginState, formData: FormData): Promise<LoginState> {
+    const account = formData.get("account") as string;
+    const password = formData.get("password") as string;
+
+    if (!account || !password) {
+      return { success: false, message: "請填寫所有欄位", account, password };
+    }
 
     try {
       const result = await loginUser(account, password);
 
       if (result.success) {
-        // 登入成功:把使用者資訊存進瀏覽器的 localStorage,Dashboard 之後讀取
+        // TODO: 登入成功把使用者資訊存進瀏覽器的 localStorage
         localStorage.setItem('student_id', String(result.id));
-        localStorage.setItem('user_name', result.name);
-        navigate('/dashboard');   // 跳轉到 dashboard 頁
-      } else {
-        setError(result.message); // 失敗:顯示後端給的訊息(例如「帳號或密碼錯誤」)
+        localStorage.setItem('user_name', result.name || "");
+        navigate("/dashboard");
+        return { success: true, message: "登入成功", account, password };
       }
-    } catch {
-      // 連不上後端(沒開、網路問題等)時的保底訊息
-      setError('無法連線到伺服器,請稍後再試');
+      return { success: false, message: result.message || "登入失敗", account, password };
+    } catch (error) {
+      return { success: false, message: "無法連線到伺服器，請稍後再試", account, password };
     }
-  };
+  }
+
+  const [formState, loginAction] = useActionState(login, initialState);
 
   return (
     <div className="min-h-screen bg-[#fff8ef] flex flex-col items-center justify-center font-sans p-4">
       <div className="bg-white border border-[#ccc] shadow-[3px_4px_3px_rgba(0,0,0,0.06)] rounded-[4px] w-full max-w-[494px] px-[40px] py-[55px] flex flex-col items-center">
-
-        {/* Header / Logo Area */}
         <div className="flex flex-col items-center gap-[9px] mb-[30px]">
           <Tag content="Student" color="#ffb6b0" />
           <Logo />
         </div>
 
-        {/* Form Area */}
-        <form className="w-full flex flex-col gap-[18px]" onSubmit={handleLogin}>
+        <form className="w-full flex flex-col gap-[18px]" action={loginAction}>
           <div className="flex flex-col">
             <label className="text-[11.1px] text-black mb-[4.6px]">Account</label>
             <input
               type="text"
-              value={account}
-              onChange={(e) => setAccount(e.target.value)}
+              name="account"
+              defaultValue={formState.account}
               className="w-full h-[35px] border border-[#ccc] rounded-[4px] px-3 text-sm focus:outline-none focus:border-[#2854c5] focus:ring-1 focus:ring-[#2854c5] transition-colors"
               required
+              onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("請填寫帳號")}
+              onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
             />
           </div>
-
           <div className="flex flex-col">
             <label className="text-[11.1px] text-black mb-[4.6px]">Password</label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              defaultValue={formState.password}
               className="w-full h-[35px] border border-[#ccc] rounded-[4px] px-3 text-sm focus:outline-none focus:border-[#2854c5] focus:ring-1 focus:ring-[#2854c5] transition-colors"
               required
+              onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("請輸入密碼")}
+              onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
             />
           </div>
-
-          {/* 錯誤訊息:只有當 error 有內容時才顯示 */}
-          {error && (
-            <p className="text-[12px] text-red-600 text-center">{error}</p>
-          )}
-
-          <div className="mt-[25px] flex flex-col gap-2">
+          <p className="text-[12px] text-red-600 text-center min-h-[18px]">
+            {!formState.success && formState.message ? formState.message : ""}
+          </p>
+          <div className="flex flex-col gap-2">
             <Button content="Login" color="#2854c5" hasArrow={true} />
             <div className="flex justify-end">
               <a href="#" className="text-[11.4px] text-black underline decoration-solid hover:text-gray-600 transition-colors">

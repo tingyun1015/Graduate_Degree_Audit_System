@@ -27,7 +27,13 @@ export interface Dashboard {
   programs: Program[];
 }
 
-// 登入 API 的回傳。成功時 success=true 並帶 id/name/role;失敗時 success=false 帶 message
+export interface LoginState {
+  success: boolean;
+  message: string;
+  account: string;
+  password: string;
+}
+
 export interface LoginResponse {
   success: boolean;
   message: string;
