@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+<<<<<<< Updated upstream
 from ..models import Enrollment, Program, Student
+=======
+>>>>>>> Stashed changes
 from ..student_dashboard import (
     calculate_current_gpa,
     calculate_current_year_label,
@@ -14,6 +17,7 @@ from ..student_dashboard import (
     normalize_degree_type,
 )
 from ..student_schemas import (
+<<<<<<< Updated upstream
     AuditProgramResponse,
     AuditRuleResponse,
     CourseRecordResponse,
@@ -23,30 +27,46 @@ from ..student_schemas import (
     EnrollmentItemResponse,
     MissingCourseResponse,
     StudentAuditResponse,
+=======
+    CourseRecordResponse,
+    DashboardProgramResponse,
+    StudentAuditResponse,
+    StudentCoursesResponse,
+>>>>>>> Stashed changes
     StudentDashboardAllResponse,
     StudentInfoResponse,
 )
 from ..student_service import (
+    build_audit_programs,
     build_program_sub_rules,
     get_active_programs,
     get_primary_program,
+<<<<<<< Updated upstream
     get_student_with_audit_data,
+=======
+    get_student_for_audit,
+    get_student_for_courses,
+>>>>>>> Stashed changes
     get_student_with_related_data,
 )
 
-router = APIRouter(prefix="/api/student", tags=["Student"])
+router = APIRouter(prefix="/api/v1/students", tags=["Student"])
 
 
-def get_student_or_404(db: Session, student_id: int) -> Student:
-    student = get_student_with_related_data(db, student_id)
+def get_student_or_404(db, student_id: int, loader=get_student_with_related_data):
+    student = loader(db, student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     return student
 
 
+<<<<<<< Updated upstream
 # ── Dashboard ──────────────────────────────────────────────────────────────────
 
 @router.get("/dashboard-all", response_model=StudentDashboardAllResponse)
+=======
+@router.get("/{student_id}/dashboard-all", response_model=StudentDashboardAllResponse)
+>>>>>>> Stashed changes
 def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
     student = get_student_or_404(db, student_id)
     active_programs = get_active_programs(student)
@@ -59,7 +79,6 @@ def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
     programs = []
     for program in active_programs:
         sub_rules, _ = build_program_sub_rules(program, passed_course_credits)
-
         is_main_major = bool(
             is_main_major_program(program)
             or (primary_program and program.program_id == primary_program.program_id)
@@ -103,6 +122,7 @@ def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
     )
 
 
+<<<<<<< Updated upstream
 # ── Audit ──────────────────────────────────────────────────────────────────────
 
 @router.get("/audit", response_model=StudentAuditResponse)
@@ -227,6 +247,15 @@ def get_student_courses(student_id: int, db: Session = Depends(get_db)):
     return [
         CourseRecordResponse(
             course_id=take.course.course_id,
+=======
+@router.get("/{student_id}/courses", response_model=StudentCoursesResponse)
+def get_student_courses(student_id: int, db: Session = Depends(get_db)):
+    student = get_student_or_404(db, student_id, loader=get_student_for_courses)
+
+    courses = [
+        CourseRecordResponse(
+            take_id=take.take_id,
+>>>>>>> Stashed changes
             course_code=take.course.course_code,
             course_name=take.course.course_name,
             credits=take.course.credits,
@@ -235,6 +264,7 @@ def get_student_courses(student_id: int, db: Session = Depends(get_db)):
             is_passed=take.is_passed,
         )
         for take in student.takes
+<<<<<<< Updated upstream
         if take.course
     ]
 
@@ -311,3 +341,17 @@ def remove_enrollment(program_id: int, student_id: int, db: Session = Depends(ge
     enrollment.is_enrolled = False
     db.commit()
     return {"success": True, "message": "已退出 Program"}
+=======
+    ]
+
+    return StudentCoursesResponse(student_id=student_id, courses=courses)
+
+
+@router.get("/{student_id}/audit", response_model=StudentAuditResponse)
+def get_student_audit(student_id: int, db: Session = Depends(get_db)):
+    student = get_student_or_404(db, student_id, loader=get_student_for_audit)
+    active_programs = get_active_programs(student)
+    programs = build_audit_programs(student, active_programs)
+
+    return StudentAuditResponse(student_id=student_id, programs=programs)
+>>>>>>> Stashed changes

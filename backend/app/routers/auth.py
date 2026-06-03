@@ -6,7 +6,7 @@ from ..database import get_db
 from ..models import User
 from ..schemas import LoginErrorResponse, LoginRequest, LoginResponse
 
-router = APIRouter(prefix="/api", tags=["Auth"])
+router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 
 
 def build_login_error_response(status_code: int, message: str) -> JSONResponse:
