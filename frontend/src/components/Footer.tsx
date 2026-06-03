@@ -1,0 +1,8 @@
+
+export default function Footer () {
+    return (
+        <footer className="text-right text-[9px] text-gray-900 py-1 px-3 shrink-0 border-t border-gray-300">
+            v0.1 · NCCU DBMS Group 8
+        </footer>
+    )
+}
