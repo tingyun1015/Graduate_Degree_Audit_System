@@ -50,7 +50,7 @@ export default function AdminProgramDetail() {
         <div className="min-h-screen flex flex-col bg-[#fff8ef]">
             <Header userName={userName} />
             <div className="flex-1 flex w-full mx-auto">
-                <AdminSidebar activeTab="programs" />
+                <AdminSidebar activeTab="program" />
                 <main className="flex-1 flex flex-col items-center pt-[50px] pb-10 px-[60px]">
                     <div className="w-full flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">

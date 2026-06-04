@@ -38,7 +38,7 @@ export default function AdminProgramList() {
             
             {/* 畫面主體 (側邊欄 + 右側內容) */}
             <div className="flex-1 flex w-full mx-auto">
-                <AdminSidebar activeTab="programs" />
+                <AdminSidebar activeTab="program" />
                 
                 <main className="flex-1 flex flex-col items-center pt-[50px] pb-10 px-[60px]">
                     <div className="w-full flex items-center justify-between mb-8">

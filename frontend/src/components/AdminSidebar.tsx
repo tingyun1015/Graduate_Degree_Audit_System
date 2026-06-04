@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 interface AdminSidebarProps {
-    activeTab?: 'programs' | 'courses';
+    activeTab?: 'program' | 'course';
 }
 
 const MOCK_DEPARTMENTS = [
@@ -10,7 +10,7 @@ const MOCK_DEPARTMENTS = [
     { id: 'math', college: 'College of Science', name: 'Department of Mathematics' }
 ];
 
-export default function AdminSidebar({ activeTab = 'programs' }: AdminSidebarProps) {
+export default function AdminSidebar({ activeTab = 'program' }: AdminSidebarProps) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [selectedDept, setSelectedDept] = useState(MOCK_DEPARTMENTS[0]);
 
@@ -30,7 +30,7 @@ export default function AdminSidebar({ activeTab = 'programs' }: AdminSidebarPro
                                 <span key={i} className="block">{line}</span>
                             ))}
                         </span>
-                        <span className={`text-[17px] text-black group-hover:text-[#23417d] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}>
+                        <span className={`text-[17px] pt-[2px] -scale-x-120 text-black group-hover:text-[#23417d] transition-transform duration-400 ${isDropdownOpen ? 'rotate-180' : ''}`}>
                             ▼
                         </span>
                     </div>
@@ -66,7 +66,7 @@ export default function AdminSidebar({ activeTab = 'programs' }: AdminSidebarPro
                 <a 
                     href="/admin/program" 
                     className={`flex items-center px-[32px] py-2 gap-[14px] ${
-                        activeTab === 'programs' ? 'text-[#23417d]' : 'text-gray-500 hover:text-[#23417d]'
+                        activeTab === 'program' ? 'text-[#23417d]' : 'text-gray-500 hover:text-[#23417d]'
                     } transition-colors`}
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -80,7 +80,7 @@ export default function AdminSidebar({ activeTab = 'programs' }: AdminSidebarPro
                 <a 
                     href="/admin/course" 
                     className={`flex items-center px-[32px] py-2 gap-[14px] ${
-                        activeTab === 'courses' ? 'text-[#23417d]' : 'text-gray-500 hover:text-[#23417d]'
+                        activeTab === 'course' ? 'text-[#23417d]' : 'text-gray-500 hover:text-[#23417d]'
                     } transition-colors`}
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
