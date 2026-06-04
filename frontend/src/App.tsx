@@ -4,6 +4,7 @@ import Dashboard from "./pages/Dashboard"
 import AdminLogin from "./pages/AdminLogin"
 import AdminProgramList from "./pages/AdminProgramList"
 import AdminProgramDetail from "./pages/AdminProgramDetail"
+import AdminCourseList from "./pages/AdminCourseList"
 
 // 如果 localStorage 裡面沒有 student_id，就強制跳轉回首頁 ("/")
 function ProtectedStudentRoute() {
@@ -37,6 +38,7 @@ function App() {
         <Route element={<ProtectedAdminRoute />}>
           <Route path="/admin/program" element={<AdminProgramList />} />
           <Route path="/admin/program/:id" element={<AdminProgramDetail />} />
+          <Route path ="/admin/course" element={<AdminCourseList />} />
         </Route>
       </Routes>
     </Router>

@@ -86,6 +86,53 @@ export async function getAdminProgramList(adminId: number, collegeId: number): P
   };
 }
 
+export async function getAdminCourseList(adminId: number, departmentId: number): Promise<CourseListResponse> {
+  // TODO: mock data
+  return {
+    success: true,
+    message: "取得 course list 成功",
+    data: {
+      courses: [
+        {
+          id: 1,
+          code: "CS1101",
+          name: "Intro to Programming",
+          credit: 3,
+          term: "Fall, 2025"
+        },
+        {
+          id: 2,
+          code: "CS1102",
+          name: "Data Structures",
+          credit: 3,
+          term: "Spring, 2026"
+        },
+        {
+          id: 3,
+          code: "CS1103",
+          name: "Algorithms",
+          credit: 3,
+          term: "Fall, 2026"
+        },
+        {
+          id: 4,
+          code: "CS1104",
+          name: "Operating Systems",
+          credit: 3,
+          term: "Spring, 2027"
+        },
+        {
+          id: 5,
+          code: "CS1105",
+          name: "Computer Networks",
+          credit: 3,
+          term: "Fall, 2027"
+        }
+      ]
+    }
+  };
+}
+
 export async function getAdminProgramDetail(adminId: number, programId: number): Promise<ProgramDetailResponse> {
   // TODO: mock data
   return {

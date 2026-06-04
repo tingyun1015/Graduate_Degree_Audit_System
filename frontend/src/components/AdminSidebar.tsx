@@ -69,7 +69,7 @@ export default function AdminSidebar({ activeTab = 'program' }: AdminSidebarProp
                         activeTab === 'program' ? 'text-[#23417d]' : 'text-gray-500 hover:text-[#23417d]'
                     } transition-colors`}
                 >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 3L1 9L5 11.18V17.18L12 21L19 17.18V11.18L21 10.09V17H23V9L12 3ZM18.82 9L12 12.72L5.18 9L12 5.28L18.82 9ZM17 15.99L12 18.72L7 15.99V12.27L12 15L17 12.27V15.99Z"/>
                     </svg>
                     <span className={`text-[15px] font-semibold ${activeTab === 'programs' ? 'underline decoration-2 underline-offset-4' : ''}`}>
@@ -83,8 +83,8 @@ export default function AdminSidebar({ activeTab = 'program' }: AdminSidebarProp
                         activeTab === 'course' ? 'text-[#23417d]' : 'text-gray-500 hover:text-[#23417d]'
                     } transition-colors`}
                 >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M18 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V4C20 2.9 19.1 2 18 2ZM18 20H6V4H18V20ZM16 11H8V9H16V11ZM16 15H8V13H16V15ZM16 7H8V5H16V7Z"/>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#23417d">
+                        <path d="M12 20C11.2 19.3667 10.3333 18.875 9.4 18.525C8.46667 18.175 7.5 18 6.5 18C5.8 18 5.11267 18.0917 4.438 18.275C3.76333 18.4583 3.11733 18.7167 2.5 19.05C2.15 19.2333 1.81267 19.225 1.488 19.025C1.16333 18.825 1.00067 18.5333 1 18.15V6.1C1 5.91667 1.046 5.74167 1.138 5.575C1.23 5.40833 1.36733 5.28333 1.55 5.2C2.31667 4.8 3.11667 4.5 3.95 4.3C4.78333 4.1 5.63333 4 6.5 4C7.73333 4 8.78333 4.14167 9.65 4.425C10.5167 4.70833 11.45 5.14167 12.45 5.725C12.6333 5.825 12.771 5.94167 12.863 6.075C12.955 6.20833 13.0007 6.38333 13 6.6V17.05C13.7333 16.7 14.471 16.4373 15.213 16.262C15.955 16.0867 16.7173 15.9993 17.5 16C18.1 16 18.6877 16.05 19.263 16.15C19.8383 16.25 20.4173 16.4 21 16.6V4.575C21.25 4.65833 21.496 4.75 21.738 4.85C21.98 4.95 22.2173 5.06667 22.45 5.2C22.6333 5.28333 22.771 5.40833 22.863 5.575C22.955 5.74167 23.0007 5.91667 23 6.1V18.15C23 18.5333 22.8373 18.825 22.512 19.025C22.1867 19.225 21.8493 19.2333 21.5 19.05C20.8833 18.7167 20.2377 18.4583 19.563 18.275C18.8883 18.0917 18.2007 18 17.5 18C16.5 18 15.5333 18.175 14.6 18.525C13.6667 18.875 12.8 19.3667 12 20ZM15.5 14V3L18.5 2V13L15.5 14Z" fill="#23417D"/>
                     </svg>
                     <span className={`text-[15px] font-semibold ${activeTab === 'courses' ? 'underline decoration-2 underline-offset-4' : ''}`}>
                         Courses

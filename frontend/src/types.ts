@@ -96,5 +96,13 @@ export interface Course {
   code: string;
   name: string;
   credit: number;
+  term?: string;
 }
   
+export interface CourseListResponse {
+  success: boolean;
+  message: string;
+  data: {
+    courses: Course[];
+  }
+}
