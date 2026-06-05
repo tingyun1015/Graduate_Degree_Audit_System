@@ -1,6 +1,12 @@
-import type { Dashboard, LoginResponse, CourseListResponse, LoginAdminResponse, AdminProgramListResponse, ProgramDetailResponse } from './types';
+import type { Dashboard, LoginResponse, CourseListResponse, LoginAdminResponse, AdminProgramListResponse, ProgramDetailResponse, ProgramRule } from './types';
 const BASE_URL = 'http://localhost:8000';
 
+
+/**
+ * ============================
+ * Student
+ * ============================
+*/
 export async function loginUser(email: string, password: string): Promise<LoginResponse> {
   const response = await fetch(`${BASE_URL}/api/login`, {
     method: 'POST',
@@ -18,20 +24,29 @@ export async function getDashboard(studentId: number): Promise<Dashboard> {
   return response.json();
 }
 
-// Admin
+
+/**
+ * ============================
+ * Admin/Staff
+ * ============================
+*/
+
+// Admin Login
 export async function loginAdmin(email: string, password: string): Promise<LoginAdminResponse> {
   // TODO: mock data using user api
   const response = await fetch(`${BASE_URL}/api/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, isAdminPage: true }),
   });
   return response.json().then((data) => {
+    // TODO: mock data - admin info + department list
     data.departmentList = [{ id: 1, name: "Computer Science", college_name: "College of Information" }, { id: 2, name: "Information Management", college_name: "College of Information" }, { id: 3, name: "Computer Science", college_name: "College of Information" }];
     return data;
   })
 }
 
+// AdminProgramList.tsx
 export async function getAdminProgramList(adminId: number, collegeId: number): Promise<AdminProgramListResponse> {
   // TODO: mock data
   return {
@@ -86,53 +101,24 @@ export async function getAdminProgramList(adminId: number, collegeId: number): P
   };
 }
 
-export async function getAdminCourseList(adminId: number, departmentId: number): Promise<CourseListResponse> {
-  // TODO: mock data
-  return {
-    success: true,
-    message: "取得 course list 成功",
-    data: {
-      courses: [
-        {
-          id: 1,
-          code: "CS1101",
-          name: "Intro to Programming",
-          credit: 3,
-          term: "Fall, 2025"
-        },
-        {
-          id: 2,
-          code: "CS1102",
-          name: "Data Structures",
-          credit: 3,
-          term: "Spring, 2026"
-        },
-        {
-          id: 3,
-          code: "CS1103",
-          name: "Algorithms",
-          credit: 3,
-          term: "Fall, 2026"
-        },
-        {
-          id: 4,
-          code: "CS1104",
-          name: "Operating Systems",
-          credit: 3,
-          term: "Spring, 2027"
-        },
-        {
-          id: 5,
-          code: "CS1105",
-          name: "Computer Networks",
-          credit: 3,
-          term: "Fall, 2027"
-        }
-      ]
-    }
-  };
-}
+export async function addNewProgram(adminId: number, program: Program): Promise<ProgramDetailResponse> {
+  // TODO
+  await fetch(`${BASE_URL}/api/admin/${adminId}/program`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(program),
+  });
+};
 
+export async function deleteProgram(adminId: number, programId: number): Promise<ProgramDetailResponse> {
+  // TODO
+  await fetch(`${BASE_URL}/api/admin/${adminId}/program/${programId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+// AdminProgramDetail.tsx
 export async function getAdminProgramDetail(adminId: number, programId: number): Promise<ProgramDetailResponse> {
   // TODO: mock data
   return {
@@ -210,3 +196,115 @@ export async function getAdminProgramDetail(adminId: number, programId: number):
     }
   };
 }
+
+// Edit elective & free elective course requirement
+export async function editProgramRule(adminId: number, rule: ProgramRule): Promise<ProgramDetailResponse> {
+  // TODO
+  await fetch(`${BASE_URL}/api/admin/${adminId}/program/${rule.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(rule),
+  });
+};
+
+// Add course into core or elective rule
+export async function addCourseIntoProgramRule(adminId: number, ruleId: number, courseId: number): Promise<ProgramDetailResponse> {
+  // TODO
+  await fetch(`${BASE_URL}/api/admin/${adminId}/program/${ruleId}/course/${courseId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+// Remove course from rule
+export async function removeCourseFromProgramRule(adminId: number, ruleId: number, courseId: number): Promise<ProgramDetailResponse> {
+  // TODO
+  await fetch(`${BASE_URL}/api/admin/${adminId}/program/${ruleId}/course/${courseId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+// AdminCourseList.tsx
+export async function getAdminCourseList(adminId: number, departmentId: number): Promise<CourseListResponse> {
+  // TODO: mock data
+  return {
+    success: true,
+    message: "取得 course list 成功",
+    data: {
+      courses: [
+        {
+          id: 1,
+          code: "CS1101",
+          name: "Intro to Programming",
+          credit: 3,
+          term: "Fall, 2025"
+        },
+        {
+          id: 2,
+          code: "CS1102",
+          name: "Data Structures",
+          credit: 3,
+          term: "Spring, 2026"
+        },
+        {
+          id: 3,
+          code: "CS1103",
+          name: "Algorithms",
+          credit: 3,
+          term: "Fall, 2026"
+        },
+        {
+          id: 4,
+          code: "CS1104",
+          name: "Operating Systems",
+          credit: 3,
+          term: "Spring, 2027"
+        },
+        {
+          id: 5,
+          code: "CS1105",
+          name: "Computer Networks",
+          credit: 3,
+          term: "Fall, 2027"
+        }
+      ]
+    }
+  };
+}
+
+export async function addNewCourse(adminId: number, course: Course): Promise<CourseDetailResponse> {
+  // TODO
+  await fetch(`${BASE_URL}/api/admin/${adminId}/course`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(course),
+  });
+};
+
+export async function deleteCourse(adminId: number, courseId: number): Promise<CourseDetailResponse> {
+  // TODO
+  await fetch(`${BASE_URL}/api/admin/${adminId}/course/${courseId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export async function editCourse(adminId: number, course: Course): Promise<CourseDetailResponse> {
+  // TODO
+  await fetch(`${BASE_URL}/api/admin/${adminId}/course/${course.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(course),
+  });
+};
+
+
+export async function logout(userId: number): Promise<void> {
+  // TODO
+  await fetch(`${BASE_URL}/api/logout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  });
+};
