@@ -51,9 +51,9 @@ export default function AdminProgramList() {
                     </div>
 
                     {/* 卡片 Grid 列表 */}
-                    <div className="grid grid-cols-2 gap-x-[40px] gap-y-[20px] w-full">
+                    <div className="grid lg:grid-cols-2 gap-x-[40px] gap-y-[20px] w-full md:grid-cols-1">
                         {data.map((prog) => (
-                            <div key={prog.id} className="bg-white border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center gap-[10px] w-full h-[126px]">
+                            <div key={prog.id} className="bg-white border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center gap-[10px] w-full min-h-[126px]">
                                 <div className="flex flex-col items-start gap-[5px] flex-1">
                                     <Tag 
                                         content={prog.type} 
@@ -74,7 +74,7 @@ export default function AdminProgramList() {
                         ))}
 
                         {/* 新增 Program 卡片 */}
-                        <div className="bg-white/50 border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center justify-center w-full h-[126px] cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div className="bg-white/50 border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center justify-center w-full min-h-[126px] cursor-pointer hover:bg-gray-50 transition-colors">
                             <div className="flex items-center gap-[6px] text-black/70 font-bold">
                                 <span className="text-[20px] leading-none mb-1">+</span>
                                 <span className="text-[13px] leading-none">Add Program</span>
