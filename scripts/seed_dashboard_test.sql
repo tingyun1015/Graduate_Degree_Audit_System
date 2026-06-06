@@ -6,10 +6,14 @@ INSERT INTO departments (dept_id, dept_name) VALUES
     (3, 'University Wide');
 
 INSERT INTO users (user_id, email, password_hash, role) VALUES
-    (1, 'student001@university.edu.tw', 'my_password', 'student');
+    (1, 'student001@university.edu.tw', 'my_password', 'student'),
+    (2, 'admin001@university.edu.tw', 'admin_password', 'staff');
 
 INSERT INTO students (student_id, name, enrollment_year, type, dept_id) VALUES
     (1, '王小明', 2023, 'full_time', 1);
+
+INSERT INTO staff (staff_id, name) VALUES
+    (2, '系統管理員');
 
 INSERT INTO programs (
     program_id,
