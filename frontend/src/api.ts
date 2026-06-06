@@ -1,4 +1,4 @@
-import type { Dashboard, LoginResponse, CourseListResponse, LoginAdminResponse, AdminProgramListResponse, ProgramDetailResponse, ProgramRule } from './types';
+import type { Dashboard, LoginResponse, CourseListResponse, LoginAdminResponse, AdminProgramListResponse, ProgramDetailResponse, Program, Course } from './types';
 const BASE_URL = 'http://localhost:8000';
 
 
@@ -273,31 +273,6 @@ export async function getAdminCourseList(adminId: number, departmentId: number):
   };
 }
 
-export async function addNewCourse(adminId: number, course: Course): Promise<CourseDetailResponse> {
-  // TODO
-  await fetch(`${BASE_URL}/api/admin/${adminId}/course`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(course),
-  });
-};
-
-export async function deleteCourse(adminId: number, courseId: number): Promise<CourseDetailResponse> {
-  // TODO
-  await fetch(`${BASE_URL}/api/admin/${adminId}/course/${courseId}`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-  });
-};
-
-export async function editCourse(adminId: number, course: Course): Promise<CourseDetailResponse> {
-  // TODO
-  await fetch(`${BASE_URL}/api/admin/${adminId}/course/${course.id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(course),
-  });
-};
 
 
 export async function logout(userId: number): Promise<void> {
@@ -308,3 +283,29 @@ export async function logout(userId: number): Promise<void> {
     body: JSON.stringify({ userId }),
   });
 };
+
+export async function addNewCourse(adminId: number, course: Course): Promise<any> {
+  // TODO
+  return fetch(`${BASE_URL}/api/admin/${adminId}/course`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(course),
+  }).then(res => res.json());
+}
+
+export async function deleteCourse(adminId: number, courseId: number): Promise<any> {
+  // TODO
+  return fetch(`${BASE_URL}/api/admin/${adminId}/course/${courseId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+export async function editCourse(adminId: number, courseId: number, course: Course): Promise<any> {
+  // TODO
+  return fetch(`${BASE_URL}/api/admin/${adminId}/course/${courseId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(course),
+  }).then(res => res.json());
+}
