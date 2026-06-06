@@ -20,16 +20,16 @@ export async function getDashboard(studentId: number): Promise<Dashboard> {
 
 // Admin
 export async function loginAdmin(email: string, password: string): Promise<LoginAdminResponse> {
-  // TODO: mock data using user api
-  const response = await fetch(`${BASE_URL}/api/login`, {
+  const response = await fetch(`${BASE_URL}/api/admin/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  return response.json().then((data) => {
-    data.departmentList = [{ id: 1, name: "Computer Science", college_name: "College of Information" }, { id: 2, name: "Information Management", college_name: "College of Information" }, { id: 3, name: "Computer Science", college_name: "College of Information" }];
-    return data;
-  })
+  const data = await response.json();
+  return {
+    ...data,
+    departmentList: data.department_list ?? [],
+  };
 }
 
 export async function getAdminProgramList(adminId: number, collegeId: number): Promise<AdminProgramListResponse> {
@@ -209,7 +209,6 @@ export async function getAdminProgramDetail(adminId: number, programId: number):
       ]
     }
   };
-}
 }
 
 export async function addNewProgram(adminId: number, program: Program): Promise<ProgramDetailResponse> {

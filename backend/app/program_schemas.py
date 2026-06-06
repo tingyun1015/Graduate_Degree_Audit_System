@@ -1,6 +1,15 @@
 from pydantic import BaseModel, ConfigDict
 
 
+class CourseInRuleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    course_id: int
+    course_code: str
+    course_name: str
+    credits: int
+
+
 class RequirementRuleResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -8,6 +17,16 @@ class RequirementRuleResponse(BaseModel):
     rule_name: str
     rule_type: str
     required_credits: int
+    courses: list[CourseInRuleResponse] = []
+
+
+class RequirementRuleUpdateRequest(BaseModel):
+    required_credits: int | None = None
+    rule_name: str | None = None
+
+
+class CourseRuleAddRequest(BaseModel):
+    course_id: int
 
 
 class ProgramResponse(BaseModel):
