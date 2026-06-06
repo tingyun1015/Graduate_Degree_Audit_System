@@ -3,9 +3,10 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AdminSidebar from "../components/AdminSidebar";
 import Button from "../components/Button";
-import { getAdminProgramDetail } from "../api";
+import Modal from "../components/Modal";
+import { getAdminProgramDetail, deleteProgram } from "../api";
 import type { ProgramInfo, ProgramRule, Course } from "../types";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 
 // 單一課程列元件
@@ -14,11 +15,11 @@ function CourseRow({ course }: { course: Course}) {
         <div className="flex items-center justify-between w-full py-1">
             <div className="flex items-center gap-3">
                 <span className="text-[12px] text-black font-semibold">{course.id}</span>
-                <span className="text-[11.4px] text-black">{course.name}</span>
+                <span className="text-[12px] text-black">{course.name}</span>
             </div>
             <div className="flex items-center gap-5">
-                <span className="text-[11.8px] text-black">{course.credit} cr</span>
-                <button className="text-[10px] text-[#bf3c32] underline decoration-solid hover:text-red-700 transition-colors cursor-pointer">
+                <span className="text-[12px] text-black">{course.credit} cr</span>
+                <button className="text-[12px] text-[#bf3c32] underline decoration-solid hover:text-red-700 transition-colors cursor-pointer">
                     remove
                 </button>
             </div>
@@ -31,7 +32,24 @@ export default function AdminProgramDetail() {
     const adminId = localStorage.getItem("admin_id") || "";
     const [programDetail, setProgramDetail] = useState<ProgramInfo | null>(null);
     const [programRules, setProgramRules] = useState<ProgramRule[] | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const { id: programId } = useParams();
+    const navigate = useNavigate();
+
+    const handleDeleteProgram = async () => {
+        if (!programId) return;
+        setIsDeleting(true);
+        try {
+            await deleteProgram(Number(adminId), Number(programId));
+            setIsDeleteModalOpen(false);
+            navigate('/admin/program');
+        } catch (error) {
+            console.error("Failed to delete program:", error);
+            alert("Failed to delete program.");
+            setIsDeleting(false);
+        }
+    };
 
     useEffect(() => {
         getAdminProgramDetail(Number(adminId), Number(programId)).then((res) => {
@@ -126,15 +144,47 @@ export default function AdminProgramDetail() {
 
                     {/* 最下方的刪除按鈕 */}
                     <div className="w-full max-w-[1000px] flex justify-center mb-8">
-                        <button className="border border-[#bf3c32] text-[#bf3c32] text-[12px] font-semibold px-[12px] py-[9px] rounded-[4px] hover:bg-red-50 transition-colors cursor-pointer">
-                            Delete Program
-                        </button>
+                        <Button 
+                            content="Delete Program"
+                            color="#bf3c32"
+                            variant="outline"
+                            isFullWidth={false}
+                            onClick={() => setIsDeleteModalOpen(true)}
+                        />
                     </div>
 
                 </main>
             </div>
             
             <Footer />
+
+            <Modal 
+                isOpen={isDeleteModalOpen} 
+                onClose={() => setIsDeleteModalOpen(false)} 
+                title="Delete Program"
+            >
+                <div className="flex flex-col gap-6">
+                    <p className="text-[14px] text-gray-700">
+                        Are you sure you want to delete this program?
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <Button 
+                            content="Cancel"
+                            color="#6b7280"
+                            variant="outline"
+                            isFullWidth={false}
+                            onClick={() => setIsDeleteModalOpen(false)}
+                        />
+                        <Button 
+                            content={isDeleting ? "Deleting..." : "Delete"}
+                            color="#bf3c32"
+                            variant="solid"
+                            isFullWidth={false}
+                            onClick={handleDeleteProgram}
+                        />
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import type { Dashboard, LoginResponse, CourseListResponse, LoginAdminResponse, AdminProgramListResponse, ProgramDetailResponse } from './types';
+import type { Dashboard, LoginResponse, CourseListResponse, LoginAdminResponse, AdminProgramListResponse, ProgramDetailResponse, Program, Course } from './types';
 const BASE_URL = 'http://localhost:8000';
 
 export async function loginUser(email: string, password: string): Promise<LoginResponse> {
@@ -209,4 +209,48 @@ export async function getAdminProgramDetail(adminId: number, programId: number):
       ]
     }
   };
+}
+}
+
+export async function addNewProgram(adminId: number, program: Program): Promise<ProgramDetailResponse> {
+  // TODO
+  return fetch(`${BASE_URL}/api/admin/${adminId}/program`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(program),
+  }).then(res => res.json());
+}
+
+export async function addNewCourse(adminId: number, course: Course): Promise<any> {
+  // TODO
+  return fetch(`${BASE_URL}/api/admin/${adminId}/course`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(course),
+  }).then(res => res.json());
+}
+
+export async function deleteProgram(adminId: number, programId: number): Promise<any> {
+  // TODO
+  return fetch(`${BASE_URL}/api/admin/${adminId}/program/${programId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+export async function deleteCourse(adminId: number, courseId: number): Promise<any> {
+  // TODO
+  return fetch(`${BASE_URL}/api/admin/${adminId}/course/${courseId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+export async function editCourse(adminId: number, courseId: number, course: Course): Promise<any> {
+  // TODO
+  return fetch(`${BASE_URL}/api/admin/${adminId}/course/${courseId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(course),
+  }).then(res => res.json());
 }

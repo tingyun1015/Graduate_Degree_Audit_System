@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import AdminSidebar from "../components/AdminSidebar";
 import Tag from "../components/Tag";
 import Button from "../components/Button";
+import AddProgramModal from "../components/AddProgramModal";
 import { getAdminProgramList } from "../api";
 import type { ProgramInfo } from "../types";
 import { useNavigate } from 'react-router-dom';
@@ -25,12 +26,18 @@ export default function AdminProgramList() {
     const adminId = localStorage.getItem("admin_id") || "";
     const collegeId = localStorage.getItem("college_id") || "";
     const [data, setData] = useState<ProgramInfo[] | []>([]);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const navigate = useNavigate();
-    useEffect(() => {
+
+    const fetchPrograms = () => {
         getAdminProgramList(Number(adminId), Number(collegeId)).then((result) => {
-        setData(result.data.programs);
-    });
-  }, [adminId]);
+            setData(result.data.programs);
+        });
+    };
+
+    useEffect(() => {
+        fetchPrograms();
+    }, [adminId, collegeId]);
 
     return (
         <div className="min-h-screen flex flex-col bg-[#fff8ef]">
@@ -74,7 +81,10 @@ export default function AdminProgramList() {
                         ))}
 
                         {/* 新增 Program 卡片 */}
-                        <div className="bg-white/50 border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center justify-center w-full min-h-[126px] cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div 
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="bg-white/50 border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center justify-center w-full min-h-[126px] cursor-pointer hover:bg-gray-50 transition-colors"
+                        >
                             <div className="flex items-center gap-[6px] text-black/70 font-bold">
                                 <span className="text-[20px] leading-none mb-1">+</span>
                                 <span className="text-[13px] leading-none">Add Program</span>
@@ -86,6 +96,13 @@ export default function AdminProgramList() {
             </div>
             
             <Footer />
+
+            <AddProgramModal 
+                isOpen={isAddModalOpen} 
+                onClose={() => setIsAddModalOpen(false)} 
+                adminId={Number(adminId)}
+                onSuccess={fetchPrograms}
+            />
         </div>
     );
 }
