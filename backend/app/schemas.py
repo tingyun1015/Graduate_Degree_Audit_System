@@ -17,3 +17,18 @@ class LoginResponse(BaseModel):
 class LoginErrorResponse(BaseModel):
     success: bool
     message: str
+
+
+class DepartmentInfo(BaseModel):
+    id: int
+    name: str
+    college_name: str
+
+
+class AdminLoginResponse(BaseModel):
+    success: bool
+    message: str
+    id: int
+    name: str
+    tag: str
+    department_list: list[DepartmentInfo]
