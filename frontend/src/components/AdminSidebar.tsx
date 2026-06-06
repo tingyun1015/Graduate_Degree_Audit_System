@@ -12,7 +12,7 @@ export default function AdminSidebar({ activeTab = 'program' }: AdminSidebarProp
     const { activeDepartment: selectedDept, setActiveDepartment: setSelectedDept } = useAdminStore();
 
     useEffect(() => {
-        if (!selectedDept && departments.length > 0) {
+        if (!selectedDept && departments?.length > 0) {
             setSelectedDept(departments[0]);
         }
     }, [departments, selectedDept, setSelectedDept]);
@@ -43,8 +43,8 @@ export default function AdminSidebar({ activeTab = 'program' }: AdminSidebarProp
                 )}
 
                 {/* Dropdown Menu */}
-                {isDropdownOpen && departments.length > 0 && (
-                    <div className="absolute top-full left-[10px] right-[10px] mt-2 bg-white border border-[#ccc] rounded-[4px] shadow-lg z-50 overflow-hidden">
+                {isDropdownOpen && departments?.length > 0 && (
+                    <div className="absolute top-full left-[21px] right-[21px] bg-white border border-[#ccc] rounded-[4px] shadow-lg mt-1 z-10 overflow-hidden">
                         {departments.map(dept => (
                             <div 
                                 key={dept.id}

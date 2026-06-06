@@ -1,4 +1,4 @@
-import type { Dashboard, LoginResponse, CourseListResponse, LoginAdminResponse, AdminProgramListResponse, ProgramDetailResponse, Program, Course } from './types';
+import type { Dashboard, LoginResponse, CourseListResponse, LoginAdminResponse, CourseResponse, AdminProgramListResponse, ProgramDetailResponse, Program, Course } from './types';
 const BASE_URL = 'http://localhost:8000';
 
 
@@ -33,250 +33,194 @@ export async function getDashboard(studentId: number): Promise<Dashboard> {
 
 // Admin Login
 export async function loginAdmin(email: string, password: string): Promise<LoginAdminResponse> {
-  // TODO: mock data using user api
   const response = await fetch(`${BASE_URL}/api/admin/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, isAdminPage: true }),
   });
   return response.json().then((data) => {
-    // TODO: mock data - admin info + department list
-    data.departmentList = [{ id: 1, name: "Department of Computer Science", college_name: "College of Information" }, { id: 2, name: "Department of Information Management", college_name: "College of Information" }, { id: 3, name: "Department of Mathmatics", college_name: "College of Science" }];
+    if (data.success && data.department_list) {
+      data.departmentList = data.department_list
+    }
     return data;
   })
 }
 
-// AdminProgramList.tsx
-export async function getAdminProgramList(adminId: number, collegeId: number): Promise<AdminProgramListResponse> {
-  // TODO: mock data
-  return {
-    success: true,
-    message: "取得 program list 成功",
-    data: {
-      programs: [
-        {
-          id: 1,
-          type: 'Major',
-          title: 'B.S. Computer Science - 2020',
-          college: 'College of Information'
-        },
-        {
-          id: 2,
-          type: 'Major',
-          title: 'B.S. Computer Science - 2023',
-          college: 'College of Information'
-        },
-        {
-          id: 3,
-          type: 'Major',
-          title: 'M.S. Computer Science',
-          college: 'College of Information'
-        },
-        {
-          id: 4,
-          type: 'Major',
-          title: 'Ph.D. Computer Science',
-          college: 'College of Information'
-        },
-        {
-          id: 5,
-          type: 'Minor',
-          title: 'BS Computer Science',
-          college: 'College of Information'
-        },
-        {
-          id: 6,
-          type: 'Program',
-          title: 'Data Science Credit Program',
-          college: 'College of Information'
-        },
-        {
-          id: 7,
-          type: 'Planned',
-          title: 'Applied Artificial Intelligence Credit Program',
-          college: 'College of Information'
-        }
-      ]
+// TODO: 取得某個 department 下的programs
+// GET /api/admin/departments/:department_id/programs
+// return 
+// {
+//   success,
+//   message,
+//   data:{
+//     programs: [
+//       {
+//         id,
+//         type, [major, minor, program]
+//         title
+//       }
+//     ]
+//   }
+// }
+export async function getAdminProgramList(departmentId: number): Promise<AdminProgramListResponse> {
+  return await fetch(`${BASE_URL}/api/admin/department/${departmentId}/program`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法取得 program list 資料');
     }
-  };
+    return res.json();
+  });
 }
 
-export async function addNewProgram(adminId: number, program: Program): Promise<ProgramDetailResponse> {
-  // TODO
-  await fetch(`${BASE_URL}/api/admin/${adminId}/program`, {
+// TODO: 在某個 department 下建立新 program
+// POST /api/admin/departments/:department_id/programs
+// payload: { "type": "major", "title": "B.S. Computer Science - 2020" }
+// return
+// {
+//   success,
+//   message,
+//   data: {
+//     program: {
+//       id,
+//       type,
+//       title
+//     }
+//   }
+// }
+export async function addNewProgram(departmentId: number, program: { type: string, title: string }): Promise<ProgramDetailResponse> {
+  return await fetch(`${BASE_URL}/api/admin/departments/${departmentId}/programs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(program),
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法新增 program 資料');
+    }
+    return res.json();
   });
 };
 
-export async function deleteProgram(adminId: number, programId: number): Promise<ProgramDetailResponse> {
-  // TODO
-  await fetch(`${BASE_URL}/api/admin/${adminId}/program/${programId}`, {
+// TODO: 刪除某個 program
+// DELETE /api/admin/programs/${program_id}
+export async function deleteProgram(programId: number): Promise<ProgramDetailResponse> {
+  return await fetch(`${BASE_URL}/api/admin/programs/${programId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法刪除 program 資料');
+    }
+    return res.json();
   });
 };
 
-// AdminProgramDetail.tsx
-export async function getAdminProgramDetail(adminId: number, programId: number): Promise<ProgramDetailResponse> {
+// TODO: 取得某個 program 的 requirements(分成 core, elective, free_elective)
+// GET /api/admin/programs/:program_id/requirements
+// return {
+//   success,
+//   message,
+//   data:{
+//     program: {
+//       id,
+//       type,
+//       title,
+//       college,
+//     },
+//     requirements: [
+//       {
+//         id,
+//         type: 'core' | 'elective' | 'free_elective',
+//         name,
+//         courses?: Course[]; // 只有core和elective有
+//         requiredCredits?: number; // 只有elective和free_elective有
+//       }
+//     ]
+//   }
+// }
+export async function getAdminProgramDetail(programId: number): Promise<ProgramDetailResponse> {
   // TODO: mock data
-  return {
-    success: true,
-    message: "取得 program detail 成功",
-    data: {
-      program: {
-        id: 1,
-        type: 'Major',
-        title: 'B.S. Computer Science - 2020',
-        college: 'College of Information',
-      },
-      rules: [
-        {
-          name: 'Core Courses',
-          type: 'core',
-          courses: [
-            {
-              id: 2010101,
-              code: "ML_101",
-              name: "機器學習概論",
-              credit: 3
-            },
-            {
-              id: 2010102,
-              code: "DL_101",
-              name: "深度學習基礎",
-              credit: 3
-            },
-            {
-              id: 2010103,
-              code: "ALGO_101",
-              name: "演算法設計",
-              credit: 3
-            },
-            {
-              id: 2010104,
-              code: "PROB_101",
-              name: "機率與統計",
-              credit: 3
-            }
-          ]
-        },
-        {
-          name: 'Elective Courses',
-          type: 'elective',
-          requiredCredits: 3,
-          courses: [
-            {
-              id: 2020201,
-              code: "NLP_101",
-              name: "自然語言處理",
-              credit: 3
-            },
-            {
-              id: 2020202,
-              code: "CV_101",
-              name: "電腦視覺",
-              credit: 3
-            },
-            {
-              id: 2020203,
-              code: "RL_101",
-              name: "強化學習",
-              credit: 3
-            }
-          ]
-        },
-        {
-          name: 'Free Elective Courses',
-          type: 'free_elective',
-          requiredCredits: 6
-        } 
-      ]
+  return await fetch(`${BASE_URL}/api/admin/programs/${programId}/requirements`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法取得 program detail 資料');
     }
-  };
-}
+    return res.json();
+  });
+};
 
-// Edit elective & free elective course requirement
-export async function editProgramRule(adminId: number, rule: ProgramRule): Promise<ProgramDetailResponse> {
+// TODO: 編輯 elective & free elective course requirement
+// PUT /api/admin/programs/${rule_id}
+// payload: { "requiredCredits": } 
+// return
+// {
+//   success,
+//   message,
+//   data: {
+//     program: {
+//       id,
+//       type,
+//       title
+//     },
+//     rules: [...]
+//   }
+// }
+export async function editAdminProgramRule(ruleId: number, requiredCredits: number): Promise<ProgramDetailResponse> {
   // TODO
-  await fetch(`${BASE_URL}/api/admin/${adminId}/program/${rule.id}`, {
+  return await fetch(`${BASE_URL}/api/admin/programs/${ruleId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(rule),
+    body: JSON.stringify({ requiredCredits }),
+  }).then((res) => {
+    if (!res.ok) throw new Error('無法更新 rule 資料');
+    return res.json();
   });
 };
 
-// Add course into core or elective rule
-export async function addCourseIntoProgramRule(adminId: number, ruleId: number, courseId: number): Promise<ProgramDetailResponse> {
+// TODO: 在 core 或 elective rule 中新增 course
+// POST /api/admin/programs/${rule_id}/course
+// payload: {"course_id": }
+// return
+// {
+//   success,
+//   message,
+//   data: {
+//     program: {
+//       id,
+//       type,
+//       title
+//     },
+//     rules: [...]
+//   }
+// }
+export async function addCourseIntoProgramRule(ruleId: number, courseId: number): Promise<ProgramDetailResponse> {
   // TODO
-  await fetch(`${BASE_URL}/api/admin/${adminId}/program/${ruleId}/course/${courseId}`, {
+  return await fetch(`${BASE_URL}/api/admin/programs/${ruleId}/courses`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ course_id: courseId }),
+  }).then((res) => {
+    if (!res.ok) throw new Error('無法新增課程至 rule');
+    return res.json();
   });
 };
 
-// Remove course from rule
-export async function removeCourseFromProgramRule(adminId: number, ruleId: number, courseId: number): Promise<ProgramDetailResponse> {
-  // TODO
-  await fetch(`${BASE_URL}/api/admin/${adminId}/program/${ruleId}/course/${courseId}`, {
+// TODO: 移除 core 或 elective rule 中的 course
+// DELETE /api/admin/programs/${rule_id}/course/${course_id}
+export async function removeCourseFromProgramRule(ruleId: number, courseId: number): Promise<ProgramDetailResponse> {
+  return await fetch(`${BASE_URL}/api/admin/programs/${ruleId}/course/${courseId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) throw new Error('無法移除課程');
+    return res.json();
   });
 };
 
-// AdminCourseList.tsx
-export async function getAdminCourseList(adminId: number, departmentId: number): Promise<CourseListResponse> {
-  // TODO: mock data
-  return {
-    success: true,
-    message: "取得 course list 成功",
-    data: {
-      courses: [
-        {
-          id: 1,
-          code: "CS1101",
-          name: "Intro to Programming",
-          credit: 3,
-          term: "Fall, 2025"
-        },
-        {
-          id: 2,
-          code: "CS1102",
-          name: "Data Structures",
-          credit: 3,
-          term: "Spring, 2026"
-        },
-        {
-          id: 3,
-          code: "CS1103",
-          name: "Algorithms",
-          credit: 3,
-          term: "Fall, 2026"
-        },
-        {
-          id: 4,
-          code: "CS1104",
-          name: "Operating Systems",
-          credit: 3,
-          term: "Spring, 2027"
-        },
-        {
-          id: 5,
-          code: "CS1105",
-          name: "Computer Networks",
-          credit: 3,
-          term: "Fall, 2027"
-        }
-      ]
-    }
-  };
-}
-
-
-
 export async function logout(userId: number): Promise<void> {
-  // TODO
   await fetch(`${BASE_URL}/api/logout`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -284,26 +228,45 @@ export async function logout(userId: number): Promise<void> {
   });
 };
 
-export async function addNewCourse(adminId: number, course: Course): Promise<any> {
-  // TODO
-  return fetch(`${BASE_URL}/api/admin/${adminId}/course`, {
+// TODO: 列出某一個 department 的 courses, 需要有分頁功能
+// GET /api/admin/departments/${department_id}/courses?page=${page}
+// return { total_pages, page_num, courses: [ {course_code, course_name, credit, term } ... ] }
+export async function getAdminCourseList(departmentId: number, page: number): Promise<CourseListResponse> {
+  const response = await fetch(`${BASE_URL}/api/admin/departments/${departmentId}/courses?page=${page}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  const data = await response.json();
+  return data;
+}
+
+// TODO: 增加某一個 department 的課程, course_code 應該要由後台直接配發
+// POST /api/admin/departments/${department_id}/courses
+// payload: {"course_name": "Computer Science", "credit": 3, "term": "1" }
+// return: {"course_id": 1, "course_code": "CS101", "course_name": "Computer Science", "credit": 3, "term": "1", "department_id": 1 }
+export async function addNewCourse(departmentId: number, course: Course): Promise<CourseResponse> {
+  return fetch(`${BASE_URL}/api/admin/departments/${departmentId}/courses`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(course),
   }).then(res => res.json());
 }
 
-export async function deleteCourse(adminId: number, courseId: number): Promise<any> {
-  // TODO
-  return fetch(`${BASE_URL}/api/admin/${adminId}/course/${courseId}`, {
+// TODO: 刪除某一個 department 的課程
+// DELETE /api/admin/courses/${course_id}
+export async function deleteCourse(courseId: number): Promise<any> {
+  return fetch(`${BASE_URL}/api/admin/courses/${courseId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
   });
 }
 
-export async function editCourse(adminId: number, courseId: number, course: Course): Promise<any> {
-  // TODO
-  return fetch(`${BASE_URL}/api/admin/${adminId}/course/${courseId}`, {
+// TODO: 編輯某一個 department 的課程
+// PUT /api/admin/courses/${course_id}
+// payload: {"course_name": "Computer Science", "credit": 3, "term": "1" }
+// return: {"course_id": 1, "course_code": "CS101", "course_name": "Computer Science", "credit": 3, "term": "1", "department_id": 1 }
+export async function editCourse(courseId: number, course: Course): Promise<CourseResponse> {
+  return fetch(`${BASE_URL}/api/admin/courses/${courseId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(course),

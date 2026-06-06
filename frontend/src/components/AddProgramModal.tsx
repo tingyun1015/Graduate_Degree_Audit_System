@@ -7,11 +7,11 @@ import type { Program } from '../types';
 interface AddProgramModalProps {
   isOpen: boolean;
   onClose: () => void;
-  adminId: number;
+  departmentId: number;
   onSuccess?: () => void;
 }
 
-export default function AddProgramModal({ isOpen, onClose, adminId, onSuccess }: AddProgramModalProps) {
+export default function AddProgramModal({ isOpen, onClose, departmentId, onSuccess }: AddProgramModalProps) {
   const [programName, setProgramName] = useState('');
   const [programType, setProgramType] = useState('Major');
   const [collegeName, setCollegeName] = useState('College of Information');
@@ -21,15 +21,10 @@ export default function AddProgramModal({ isOpen, onClose, adminId, onSuccess }:
     e.preventDefault();
     setIsLoading(true);
     try {
-      const newProgram: Program = {
-        program_id: Date.now(),
-        program_name: programName,
-        program_type: programType,
-        college_name: collegeName,
-        is_main_major: programType === 'Major',
-        sub_rules: []
-      };
-      await addNewProgram(adminId, newProgram);
+      await addNewProgram(departmentId, {
+        type: programType.toLowerCase(),
+        title: programName
+      });
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -66,22 +61,9 @@ export default function AddProgramModal({ isOpen, onClose, adminId, onSuccess }:
               onChange={(e) => setProgramType(e.target.value)}
               className="border border-[#ccc] rounded-[4px] px-3 py-2 text-[14px] bg-white focus:outline-none focus:border-[#2854c5]"
             >
-              <option value="Major">Major</option>
-              <option value="Minor">Minor</option>
-              <option value="Program">Program</option>
-              <option value="Planned">Planned</option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-2 flex-1">
-            <label className="text-[14px] font-semibold text-[#23417d]">College</label>
-            <select 
-              value={collegeName}
-              onChange={(e) => setCollegeName(e.target.value)}
-              className="border border-[#ccc] rounded-[4px] px-3 py-2 text-[14px] bg-white focus:outline-none focus:border-[#2854c5]"
-            >
-              <option value="College of Information">College of Information</option>
-              <option value="College of Commerce">College of Commerce</option>
-              <option value="College of Science">College of Science</option>
+              <option value="major">Major</option>
+              <option value="minor">Minor</option>
+              <option value="program">Program</option>
             </select>
           </div>
         </div>

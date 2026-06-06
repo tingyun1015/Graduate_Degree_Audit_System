@@ -7,12 +7,11 @@ import type { Course } from '../types';
 interface EditCourseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  adminId: number;
   course: Course | null;
   onSuccess?: () => void;
 }
 
-export default function EditCourseModal({ isOpen, onClose, adminId, course, onSuccess }: EditCourseModalProps) {
+export default function EditCourseModal({ isOpen, onClose, course, onSuccess }: EditCourseModalProps) {
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [credit, setCredit] = useState(3);
@@ -21,9 +20,9 @@ export default function EditCourseModal({ isOpen, onClose, adminId, course, onSu
 
   useEffect(() => {
     if (course) {
-      setCode(course.code);
-      setName(course.name);
-      setCredit(course.credit);
+      setCode(course.course_code);
+      setName(course.course_name);
+      setCredit(course.credits);
       setTerm(course.term || 'Fall, 2025');
     }
   }, [course]);
@@ -36,12 +35,12 @@ export default function EditCourseModal({ isOpen, onClose, adminId, course, onSu
     try {
       const updatedCourse: Course = {
         id: course.id,
-        code,
-        name,
-        credit,
-        term
+        course_code: code,
+        course_name: name,
+        credits: credit,
+        term: term
       };
-      await editCourse(adminId, course.id, updatedCourse);
+      await editCourse(course.id, updatedCourse);
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -63,10 +62,8 @@ export default function EditCourseModal({ isOpen, onClose, adminId, course, onSu
             <input 
               type="text" 
               value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="e.g. CS101"
-              required
-              className="border border-[#ccc] rounded-[4px] px-3 py-2 text-[14px] focus:outline-none focus:border-[#2854c5]"
+              disabled
+              className="border border-[#ccc] rounded-[4px] px-3 py-2 text-[14px] bg-gray-100 cursor-not-allowed focus:outline-none"
             />
           </div>
           <div className="flex flex-col gap-2 flex-1">

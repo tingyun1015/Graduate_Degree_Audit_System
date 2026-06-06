@@ -23,13 +23,13 @@ export default function AdminCourseList() {
     const navigate = useNavigate();
     const { activeDepartment } = useAdminStore();
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const [serverTotalPages, setServerTotalPages] = useState(1);
 
     const handleDeleteCourse = async () => {
         if (!selectedCourse) return;
         setIsDeleting(true);
         try {
-            await deleteCourse(Number(adminId), selectedCourse.id);
+            await deleteCourse(selectedCourse.id);
             setIsDeleteModalOpen(false);
             fetchCourses();
         } catch (error) {
@@ -40,20 +40,32 @@ export default function AdminCourseList() {
         }
     };
 
-    const fetchCourses = () => {
-        getAdminCourseList(Number(adminId), Number(activeDepartment?.id)).then((result) => {
-            setData(result.data.courses);
-            setCurrentPage(1);
+    const fetchCourses = (page: number = currentPage) => {
+        if (!activeDepartment?.id) return;
+        getAdminCourseList(Number(activeDepartment.id), page).then((result) => {
+            setData(result.courses || []);
+            setServerTotalPages(result.total_pages || 1);
+            setCurrentPage(result.page_num || 1);
+        }).catch((err) => {
+            console.error("Failed to fetch courses:", err);
+            setData([]);
         });
     };
 
+    // Reset page to 1 when department changes
     useEffect(() => {
-        fetchCourses();
+        if (activeDepartment?.id) {
+            setCurrentPage(1);
+            fetchCourses(1);
+        }
     }, [activeDepartment?.id]);
 
-    const totalPages = Math.max(1, Math.ceil(data.length / itemsPerPage));
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedData = data.slice(startIndex, startIndex + itemsPerPage);
+    // Fetch courses when currentPage changes
+    useEffect(() => {
+        fetchCourses(currentPage);
+    }, [currentPage]);
+
+    const paginatedData = data || [];
 
     return (
         <div className="min-h-screen flex flex-col bg-[#fff8ef]">
@@ -93,9 +105,9 @@ export default function AdminCourseList() {
                             <tbody>
                                 {paginatedData.map((course) => (
                                     <tr key={course.id} className="border-b border-dashed border-[#ccc] text-[14px] text-black">
-                                        <td className="py-4">{course.code}</td>
-                                        <td className="py-4">{course.name}</td>
-                                        <td className="py-4">{course.credit}</td>
+                                        <td className="py-4">{course.course_code}</td>
+                                        <td className="py-4">{course.course_name}</td>
+                                        <td className="py-4">{course.credits}</td>
                                         <td className="py-4">{course.term || '-'}</td>
                                         <td className="py-4 text-right flex justify-end items-center gap-4">
                                             <button 
@@ -119,7 +131,7 @@ export default function AdminCourseList() {
                                         </td>
                                     </tr>
                                 ))}
-                                {data.length === 0 && (
+                                {(!data || data.length === 0) && (
                                     <tr>
                                         <td colSpan={5} className="py-8 text-center text-gray-500">No courses found.</td>
                                     </tr>
@@ -127,15 +139,15 @@ export default function AdminCourseList() {
                             </tbody>
                         </table>
                         
-                        {totalPages > 1 && (
-                            <div className="mt-auto pt-6 flex justify-center items-center gap-2 text-[#2854c5] text-[14px] select-none">
+                        {serverTotalPages > 1 && (
+                            <div className="flex justify-center mt-[20px] gap-2 text-[#2854c5] text-[14px]">
                                 <span 
                                     className={`cursor-pointer hover:underline mr-1 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed hover:no-underline' : ''}`}
                                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 >
                                     ‹
                                 </span>
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                {Array.from({ length: serverTotalPages }, (_, i) => i + 1).map(page => (
                                     <span 
                                         key={page}
                                         className={`cursor-pointer hover:underline ${currentPage === page ? 'font-bold underline' : ''}`}
@@ -145,8 +157,8 @@ export default function AdminCourseList() {
                                     </span>
                                 ))}
                                 <span 
-                                    className={`cursor-pointer hover:underline ml-1 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed hover:no-underline' : ''}`}
-                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    className={`cursor-pointer hover:underline ml-1 ${currentPage === serverTotalPages ? 'opacity-50 cursor-not-allowed hover:no-underline' : ''}`}
+                                    onClick={() => setCurrentPage(p => Math.min(serverTotalPages, p + 1))}
                                 >
                                     ›
                                 </span>
@@ -161,8 +173,8 @@ export default function AdminCourseList() {
             <AddCourseModal 
                 isOpen={isAddModalOpen} 
                 onClose={() => setIsAddModalOpen(false)} 
-                adminId={Number(adminId)}
-                onSuccess={fetchCourses}
+                departmentId={Number(activeDepartment?.id)}
+                onSuccess={() => fetchCourses(currentPage)}
             />
 
             <EditCourseModal 
@@ -171,9 +183,8 @@ export default function AdminCourseList() {
                     setIsEditModalOpen(false);
                     setSelectedCourse(null);
                 }} 
-                adminId={Number(adminId)}
                 course={selectedCourse}
-                onSuccess={fetchCourses}
+                onSuccess={() => fetchCourses(currentPage)}
             />
 
             <Modal 
