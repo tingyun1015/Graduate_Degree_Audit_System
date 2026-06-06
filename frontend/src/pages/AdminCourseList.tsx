@@ -9,11 +9,11 @@ import Modal from "../components/Modal";
 import { getAdminCourseList, deleteCourse } from "../api";
 import type { Course } from "../types";
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/useAuthStore';
+import { useAdminStore } from '../store/useAdminStore';
 
 export default function AdminCourseList() {
-    const userName = localStorage.getItem("user_name") || "";
-    const adminId = localStorage.getItem("admin_id") || "";
-    const collegeId = localStorage.getItem("college_id") || "";
+    const { userName, userId: adminId } = useAuthStore();
     const [data, setData] = useState<Course[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -21,6 +21,9 @@ export default function AdminCourseList() {
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const navigate = useNavigate();
+    const { activeDepartment } = useAdminStore();
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const handleDeleteCourse = async () => {
         if (!selectedCourse) return;
@@ -38,18 +41,23 @@ export default function AdminCourseList() {
     };
 
     const fetchCourses = () => {
-        getAdminCourseList(Number(adminId), Number(collegeId)).then((result) => {
+        getAdminCourseList(Number(adminId), Number(activeDepartment?.id)).then((result) => {
             setData(result.data.courses);
+            setCurrentPage(1);
         });
     };
 
     useEffect(() => {
         fetchCourses();
-    }, [adminId, collegeId]);
+    }, [activeDepartment?.id]);
+
+    const totalPages = Math.max(1, Math.ceil(data.length / itemsPerPage));
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedData = data.slice(startIndex, startIndex + itemsPerPage);
 
     return (
         <div className="min-h-screen flex flex-col bg-[#fff8ef]">
-            <Header userName={userName} />
+            <Header userName={userName || ""} />
             
             <div className="flex-1 flex w-full mx-auto">
                 <AdminSidebar activeTab="course" />
@@ -83,7 +91,7 @@ export default function AdminCourseList() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.map((course) => (
+                                {paginatedData.map((course) => (
                                     <tr key={course.id} className="border-b border-dashed border-[#ccc] text-[14px] text-black">
                                         <td className="py-4">{course.code}</td>
                                         <td className="py-4">{course.name}</td>
@@ -119,14 +127,31 @@ export default function AdminCourseList() {
                             </tbody>
                         </table>
                         
-                        <div className="mt-auto pt-6 flex justify-center items-center gap-2 text-[#2854c5] text-[14px]">
-                            <span className="cursor-pointer font-bold">1</span>
-                            <span className="cursor-pointer hover:underline">2</span>
-                            <span className="cursor-pointer hover:underline">3</span>
-                            <span className="cursor-pointer hover:underline">4</span>
-                            <span className="cursor-pointer hover:underline">5</span>
-                            <span className="cursor-pointer hover:underline ml-1">›</span>
-                        </div>
+                        {totalPages > 1 && (
+                            <div className="mt-auto pt-6 flex justify-center items-center gap-2 text-[#2854c5] text-[14px] select-none">
+                                <span 
+                                    className={`cursor-pointer hover:underline mr-1 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed hover:no-underline' : ''}`}
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                >
+                                    ‹
+                                </span>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                    <span 
+                                        key={page}
+                                        className={`cursor-pointer hover:underline ${currentPage === page ? 'font-bold underline' : ''}`}
+                                        onClick={() => setCurrentPage(page)}
+                                    >
+                                        {page}
+                                    </span>
+                                ))}
+                                <span 
+                                    className={`cursor-pointer hover:underline ml-1 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed hover:no-underline' : ''}`}
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                >
+                                    ›
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </main>
             </div>
