@@ -8,6 +8,8 @@ import AddProgramModal from "../components/AddProgramModal";
 import { getAdminProgramList } from "../api";
 import type { ProgramInfo } from "../types";
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../store/useAuthStore';
+import { useAdminStore } from '../store/useAdminStore';
 
 
 // 小工具：取得對應標籤的背景色
@@ -22,22 +24,25 @@ function getTagColor(type: string) {
 }
 
 export default function AdminProgramList() {
-    const userName = localStorage.getItem("user_name") || "";
-    const adminId = localStorage.getItem("admin_id") || "";
-    const collegeId = localStorage.getItem("college_id") || "";
+    const { userName } = useAuthStore();
+    const { activeDepartment } = useAdminStore();
     const [data, setData] = useState<ProgramInfo[] | []>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const navigate = useNavigate();
 
     const fetchPrograms = () => {
-        getAdminProgramList(Number(adminId), Number(collegeId)).then((result) => {
-            setData(result.data.programs);
+        if (!activeDepartment?.id) return;
+        getAdminProgramList(Number(activeDepartment.id)).then((result) => {
+            setData(result.data.programs || []);
+        }).catch(err => {
+            console.error("Failed to fetch programs:", err);
+            setData([]);
         });
     };
 
     useEffect(() => {
         fetchPrograms();
-    }, [adminId, collegeId]);
+    }, [activeDepartment?.id]);
 
     return (
         <div className="min-h-screen flex flex-col bg-[#fff8ef]">
@@ -100,7 +105,7 @@ export default function AdminProgramList() {
             <AddProgramModal 
                 isOpen={isAddModalOpen} 
                 onClose={() => setIsAddModalOpen(false)} 
-                adminId={Number(adminId)}
+                departmentId={Number(activeDepartment?.id)}
                 onSuccess={fetchPrograms}
             />
         </div>

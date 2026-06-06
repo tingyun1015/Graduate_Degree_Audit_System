@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { DepartmentInfo } from '../types';
+import { useAuthStore } from '../store/useAuthStore';
+import { useAdminStore } from '../store/useAdminStore';
 
 interface AdminSidebarProps {
     activeTab?: 'program' | 'course';
@@ -7,23 +8,14 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ activeTab = 'program' }: AdminSidebarProps) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [departments, setDepartments] = useState<DepartmentInfo[]>([]);
-    const [selectedDept, setSelectedDept] = useState<DepartmentInfo | null>(null);
+    const { departmentList: departments } = useAuthStore();
+    const { activeDepartment: selectedDept, setActiveDepartment: setSelectedDept } = useAdminStore();
 
     useEffect(() => {
-        try {
-            const stored = localStorage.getItem('department_list');
-            if (stored) {
-                const parsed = JSON.parse(stored) as DepartmentInfo[];
-                setDepartments(parsed);
-                if (parsed.length > 0) {
-                    setSelectedDept(parsed[0]);
-                }
-            }
-        } catch (e) {
-            console.error("Failed to parse department list from localStorage", e);
+        if (!selectedDept && departments?.length > 0) {
+            setSelectedDept(departments[0]);
         }
-    }, []);
+    }, [departments, selectedDept, setSelectedDept]);
 
     return (
         <aside className="w-[230px] shrink-0 bg-[#fff8ef] border-r border-[#d9d9d9] flex flex-col pt-[17px] sticky top-16 h-[calc(100vh-86.5px)] overflow-y-auto self-start">
@@ -51,8 +43,8 @@ export default function AdminSidebar({ activeTab = 'program' }: AdminSidebarProp
                 )}
 
                 {/* Dropdown Menu */}
-                {isDropdownOpen && departments.length > 0 && (
-                    <div className="absolute top-full left-[10px] right-[10px] mt-2 bg-white border border-[#ccc] rounded-[4px] shadow-lg z-50 overflow-hidden">
+                {isDropdownOpen && departments?.length > 0 && (
+                    <div className="absolute top-full left-[21px] right-[21px] bg-white border border-[#ccc] rounded-[4px] shadow-lg mt-1 z-10 overflow-hidden">
                         {departments.map(dept => (
                             <div 
                                 key={dept.id}

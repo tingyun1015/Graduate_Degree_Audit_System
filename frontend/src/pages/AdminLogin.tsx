@@ -5,6 +5,7 @@ import Tag from '../components/Tag';
 import Button from '../components/Button';
 import { loginAdmin } from '../api';
 import { LoginState } from '../types';
+import { useAuthStore } from '../store/useAuthStore';
 
 const initialState: LoginState = {
   success: false,
@@ -28,10 +29,7 @@ export default function AdminLogin() {
       const result = await loginAdmin(account, password);
 
       if (result.success) {
-        // TODO: 登入成功把使用者資訊存進瀏覽器的 localStorage
-        localStorage.setItem('admin_id', String(result.id));
-        localStorage.setItem('user_name', result.name || "");
-        localStorage.setItem('department_list', JSON.stringify(result.departmentList));
+        useAuthStore.getState().loginAdmin(result.id, result.name || "", result.departmentList);
         navigate("/admin/program");
         return { success: true, message: "登入成功", account, password };
       }
