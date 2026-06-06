@@ -28,7 +28,6 @@ export default function Login() {
       const result = await loginUser(account, password);
 
       if (result.success) {
-        // TODO: 登入成功把使用者資訊存進瀏覽器的 localStorage
         localStorage.setItem('student_id', String(result.id));
         localStorage.setItem('user_name', result.name || "");
         navigate("/dashboard");

@@ -3,7 +3,10 @@ import Header from "../components/Header";
 import AdminSidebar from "../components/AdminSidebar";
 import Footer from '../components/Footer';
 import Button from "../components/Button";
-import { getAdminCourseList } from "../api";
+import AddCourseModal from "../components/AddCourseModal";
+import EditCourseModal from "../components/EditCourseModal";
+import Modal from "../components/Modal";
+import { getAdminCourseList, deleteCourse } from "../api";
 import type { Course } from "../types";
 import { useNavigate } from 'react-router-dom';
 
@@ -12,12 +15,36 @@ export default function AdminCourseList() {
     const adminId = localStorage.getItem("admin_id") || "";
     const collegeId = localStorage.getItem("college_id") || "";
     const [data, setData] = useState<Course[]>([]);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const navigate = useNavigate();
 
-    useEffect(() => {
+    const handleDeleteCourse = async () => {
+        if (!selectedCourse) return;
+        setIsDeleting(true);
+        try {
+            await deleteCourse(Number(adminId), selectedCourse.id);
+            setIsDeleteModalOpen(false);
+            fetchCourses();
+        } catch (error) {
+            console.error("Failed to delete course:", error);
+            alert("Failed to delete course.");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const fetchCourses = () => {
         getAdminCourseList(Number(adminId), Number(collegeId)).then((result) => {
             setData(result.data.courses);
         });
+    };
+
+    useEffect(() => {
+        fetchCourses();
     }, [adminId, collegeId]);
 
     return (
@@ -40,7 +67,7 @@ export default function AdminCourseList() {
                             color="#2854c5"
                             hasArrow={false}
                             isFullWidth={false}
-                            onClick={() => {}}
+                            onClick={() => setIsAddModalOpen(true)}
                         />
                     </div>
 
@@ -48,11 +75,11 @@ export default function AdminCourseList() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-[#ccc] text-[#23417d] text-[14px]">
-                                    <th className="pb-3 font-semibold">Code</th>
-                                    <th className="pb-3 font-semibold">Name</th>
-                                    <th className="pb-3 font-semibold">Credits</th>
-                                    <th className="pb-3 font-semibold">Term</th>
-                                    <th className="pb-3 font-semibold text-right" />
+                                    <th className="pb-3 font-semibold w-[15%]">Code</th>
+                                    <th className="pb-3 font-semibold w-[45%]">Name</th>
+                                    <th className="pb-3 font-semibold w-[15%]">Credits</th>
+                                    <th className="pb-3 font-semibold w-[15%]">Term</th>
+                                    <th className="pb-3 font-semibold text-right w-[10%]" />
                                 </tr>
                             </thead>
                             <tbody>
@@ -62,9 +89,25 @@ export default function AdminCourseList() {
                                         <td className="py-4">{course.name}</td>
                                         <td className="py-4">{course.credit}</td>
                                         <td className="py-4">{course.term || '-'}</td>
-                                        <td className="py-4 text-right">
-                                            <button className="text-[#2854c5] hover:underline mr-4">edit</button>
-                                            <button className="text-red-500 hover:text-red-700 font-bold">remove</button>
+                                        <td className="py-4 text-right flex justify-end items-center gap-4">
+                                            <button 
+                                                className="text-[13px] text-[#2854c5] hover:underline cursor-pointer"
+                                                onClick={() => {
+                                                    setSelectedCourse(course);
+                                                    setIsEditModalOpen(true);
+                                                }}
+                                            >
+                                                edit
+                                            </button>
+                                            <button 
+                                                className="text-[13px] text-[#bf3c32] decoration-solid hover:text-red-700 transition-colors cursor-pointer"
+                                                onClick={() => {
+                                                    setSelectedCourse(course);
+                                                    setIsDeleteModalOpen(true);
+                                                }}
+                                            >
+                                                <svg viewBox="0,0,24,24" xmlns="http://www.w3.org/2000/svg" width="16" height="16" stroke-width="1" transform="rotate(0) matrix(1 0 0 1 0 0)"><path fill="#1a1a1a" d="M7 21q-.825 0-1.412-.587T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21zM17 6H7v13h10zM9 17h2V8H9zm4 0h2V8h-2zM7 6v13z"></path></svg>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -89,6 +132,52 @@ export default function AdminCourseList() {
             </div>
             
             <Footer />
+
+            <AddCourseModal 
+                isOpen={isAddModalOpen} 
+                onClose={() => setIsAddModalOpen(false)} 
+                adminId={Number(adminId)}
+                onSuccess={fetchCourses}
+            />
+
+            <EditCourseModal 
+                isOpen={isEditModalOpen} 
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setSelectedCourse(null);
+                }} 
+                adminId={Number(adminId)}
+                course={selectedCourse}
+                onSuccess={fetchCourses}
+            />
+
+            <Modal 
+                isOpen={isDeleteModalOpen} 
+                onClose={() => setIsDeleteModalOpen(false)} 
+                title="Delete Course"
+            >
+                <div className="flex flex-col gap-6">
+                    <p className="text-[14px] text-gray-700">
+                        Are you sure you want to delete the course <strong>{selectedCourse?.code}</strong>?
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <Button 
+                            content="Cancel"
+                            color="#6b7280"
+                            variant="outline"
+                            isFullWidth={false}
+                            onClick={() => setIsDeleteModalOpen(false)}
+                        />
+                        <Button 
+                            content={isDeleting ? "Deleting..." : "Delete"}
+                            color="#bf3c32"
+                            variant="solid"
+                            isFullWidth={false}
+                            onClick={handleDeleteCourse}
+                        />
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
