@@ -119,6 +119,7 @@ export type CourseStatus = 'done' | 'planned' | 'missing';
 
 export interface StudentCourseRow {
   status: CourseStatus;
+  courseId: number;   // 加/刪計畫課時要用,對應 audit 的 course_id
   code: string;
   name: string;
   credits: string;

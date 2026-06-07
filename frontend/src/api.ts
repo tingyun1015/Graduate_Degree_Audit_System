@@ -1,4 +1,4 @@
-import type { Dashboard, LoginResponse, CourseListResponse, AdminLoginResponse, CourseResponse, AdminProgramListResponse, ProgramDetailResponse, Program, Course, Audit, StudentActionResponse, StudentEnrollment } from './types';
+import type { Dashboard, LoginResponse, CourseListResponse, AdminLoginResponse, CourseResponse, AdminProgramListResponse, ProgramDetailResponse, Program, Course, Audit, AuditCourse, StudentActionResponse, StudentEnrollment } from './types';
 const BASE_URL = 'http://localhost:8000';
 
 
@@ -163,16 +163,45 @@ export async function deleteStudentProgram(studentId: number, programId: number)
 //   "success": true,
 //   "message": "Planned course deleted successfully."
 // }
-export async function deletePlannedCourse(studentId: number, courseId: number): Promise<{
-  success: boolean,
-  message: string,
-}> {
+export async function deletePlannedCourse(studentId: number, courseId: number): Promise<StudentActionResponse> {
   return await fetch(`${BASE_URL}/api/student/${studentId}/courses/${courseId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
   }).then((res) => {
     if (!res.ok) {
       throw new Error('無法刪除 course 資料');
+    }
+    return res.json();
+  });
+}
+
+// 加一門計畫課(建立 is_passed=false 的 takes 紀錄)
+// POST /api/student/{student_id}/courses  body: { course_id }
+export async function addPlannedCourse(studentId: number, courseId: number): Promise<StudentActionResponse> {
+  return await fetch(`${BASE_URL}/api/student/${studentId}/courses`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ course_id: courseId }),
+  }).then(async (res) => {
+    if (!res.ok) {
+      // 把後端訊息撈出來(例:Course already planned / already completed)
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.detail || '無法加入計畫課程');
+    }
+    return res.json();
+  });
+}
+
+// 搜尋課程(Add Planned Course 卡片用)。name 為空字串時回全部
+// GET /api/courses?name=...
+export async function getCourses(name = ''): Promise<AuditCourse[]> {
+  const query = name ? `?name=${encodeURIComponent(name)}` : '';
+  return await fetch(`${BASE_URL}/api/courses${query}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法取得課程清單');
     }
     return res.json();
   });
