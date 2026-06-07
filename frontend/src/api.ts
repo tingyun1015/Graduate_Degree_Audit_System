@@ -24,6 +24,164 @@ export async function getDashboard(studentId: number): Promise<Dashboard> {
   return response.json();
 }
 
+// TODO: 取得某個 student 在某個 program 下的 audit 結果
+// GET /api/student/{student_id}/programs/{program_id}/audit or GET /api/student/programs/audit?student_id=0&program_id=0&program_id=1
+// {
+//   "student_id": 0,
+//   "can_graduate": true,
+//   "programs": [
+//     {
+//       "program_id": 0,
+//       "program_name": "string",
+//       "program_type": "string",
+//       "can_graduate": true,
+//       "rules": [
+//         {
+//           "rule_id": 0,
+//           "rule_type": "string", // 課程類別：core、elective、free_elective
+//           "required_credits": 0,
+//           "earned_credits": 0,
+//           "remaining_credits": 0,
+//           "counted_courses": [ // student has already taken courses
+//             {
+//               "course_id": 0,
+//               "course_code": "string",
+//               "course_name": "string",
+//               "credits": 0
+//             }
+//           ],
+//           "planned_courses": [ // student plan to take courses, but not yet taken
+//             {
+//               "course_id": 0,
+//               "course_code": "string",
+//               "course_name": "string",
+//               "credits": 0
+//             }
+//           ],
+//           "missing_courses": [ // if rule_type === 'core' or 'elective', show courses that student has not taken and not planned to take
+//             {
+//               "course_id": 0,
+//               "course_code": "string",
+//               "course_name": "string",
+//               "credits": 0
+//             }
+//           ]
+//         }
+//       ],
+//     }
+//   ]
+// }
+export async function getStudentAudit(studentId: number, programId: number): Promise<Audit> {
+  return await fetch(`${BASE_URL}/api/student/${studentId}/programs/${programId}/audit`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法取得 audit 資料');
+    }
+    return res.json();
+  });
+}
+
+// TODO: 建立 student 的 program enrollment
+// POST /api/student/enrollments
+// payload: {
+//   "student_id": 0,
+//   "program_id": 0,
+//   "enrollment_semester": "string",
+//   "expected_graduation": "2026-01-01",
+//   "current_gpa": 0,
+//   "total_required_credits": 0
+// }
+// return 
+// {
+//   "success": true,
+//   "message": "Enrollment created successfully.",
+//   "data": {
+//     "enrollment": {
+//       "id": 0,
+//       "student_id": 0,
+//       "program_id": 0,
+//       "is_enrolled": true, 
+//       "is_planned": true,
+//     }
+//   }
+// }
+export async function addStudentProgram(studentId: number, programId: number): Promise<Audit> {
+  return await fetch(`${BASE_URL}/api/student/enrollments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ student_id: studentId, program_id: programId }),
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法取得 audit 資料');
+    }
+    return res.json();
+  });
+}
+
+
+// TODO: 刪除已 planned 的 program
+// DELETE /api/student/${student_id}/programs/${program_id}
+// payload: {}
+// return
+// {
+//   "success": true,
+//   "message": "Program enrollment deleted successfully."
+// }
+export async function deleteStudentProgram(studentId: number, programId: number): Promise<Audit> {
+  return await fetch(`${BASE_URL}/api/student/${studentId}/programs/${programId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法刪除 program 資料');
+    }
+    return res.json();
+  });
+}
+
+// TODO: 刪除已 planned 的 course
+// DELETE /api/student/${student_id}/courses/${course_id}
+// payload: {}
+// return
+// {
+//   "success": true,
+//   "message": "Planned course deleted successfully."
+// }
+export async function deletePlannedCourse(studentId: number, courseId: number): Promise<{
+  success: boolean,
+  message: string,
+}> {
+  return await fetch(`${BASE_URL}/api/student/${studentId}/courses/${courseId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法刪除 course 資料');
+    }
+    return res.json();
+  });
+}
+
+export async function getAllPrograms(): Promise<{
+  success: boolean,
+  message: string,
+  data: {
+    programs: Program[]
+  }
+}> {
+  return await fetch(`${BASE_URL}/api/programs`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法取得 programs 資料');
+    }
+    return res.json();
+  });
+}
+
 
 /**
  * ============================
