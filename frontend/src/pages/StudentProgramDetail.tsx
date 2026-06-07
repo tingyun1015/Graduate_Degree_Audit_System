@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Tag from '../components/Tag';
+import Button from '../components/Button';
 import {
   getStudentAudit,
   getStudentEnrollments,
@@ -118,6 +119,7 @@ function RuleCard({
   onRemove: (courseId: number) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const planned_credit = rule.courses.filter(c => c.status === 'planned').reduce((acc, course) => acc + Number(course.credits), 0);
   return (
     <section className="bg-white border border-[#cccccc] rounded-[4px] px-[15px] pt-[15px] pb-[10px] flex flex-col gap-[14px]">
       <div className="flex flex-col gap-[15px]">
@@ -125,7 +127,7 @@ function RuleCard({
         <div className="flex justify-between items-end">
           <span className="text-[15px] font-bold text-[#23417d]">{rule.name}</span>
           <span className="text-[15px] font-bold text-[#23417d]">
-            {rule.earned} / {rule.required}
+            {rule.earned}{planned_credit > 0 && <span className="text-gray-600"> + {planned_credit}</span>} / {rule.required}
           </span>
         </div>
         {/* 課程列清單(收合時隱藏) */}
@@ -324,7 +326,7 @@ export default function StudentProgramDetail() {
   const navigate = useNavigate();
   // 登入時存進 localStorage 的資料(跟 Dashboard 用同一組 key)
   const studentId = Number(localStorage.getItem('student_id')) || 1;
-  const userName = localStorage.getItem('user_name') || '王小明';
+  const userName = localStorage.getItem('user_name') || '';
 
   const [detail, setDetail] = useState<StudentProgramDetailData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -386,9 +388,7 @@ export default function StudentProgramDetail() {
   if (error) {
     return <p className="p-5 text-[#be3c32]">{error}</p>;
   }
-  if (!detail) {
-    return <p className="p-5">Loading...</p>;
-  }
+
 
   return (
     <div className="min-h-screen bg-[#fff8ef] flex flex-col">
@@ -398,15 +398,18 @@ export default function StudentProgramDetail() {
         {/* 頂部列:鏡像兩欄對齊 —— 左欄上方 Back,右欄上方 Curriculum Details + Print */}
         <div className="flex gap-6 items-start">
           <div className="w-[430px] shrink-0 flex justify-between items-start">
-            <button
+            <Button
+              content="← Back"
+              color="#2854c5"
+              isFullWidth={false}
               onClick={() => navigate('/dashboard')}
-              className="bg-[#2854c5] text-white text-[13px] font-medium rounded-[4px] px-3 py-1.5 hover:brightness-95 transition"
-            >
-              ← Back
-            </button>
+            />
             {/* 只有 planned(is_enrolled=false)才出現 Delete Plan */}
-            {!detail.isEnrolled && (
-              <button
+            {detail && !detail.isEnrolled && (
+              <Button
+                content="Delete Plan"
+                color="#c0392b"
+                isFullWidth={false}
                 onClick={async () => {
                   // 後端:DELETE /api/student/{sid}/programs/{pid}(只能刪 planned,已 enrolled 會被後端拒絕)
                   if (!window.confirm('Are you sure you want to delete this plan?')) return;
@@ -422,10 +425,7 @@ export default function StudentProgramDetail() {
                     window.alert('Failed to delete plan, please try again later');
                   }
                 }}
-                className="bg-[#c0392b] text-white text-[13px] font-medium rounded-[4px] px-3 py-1.5 hover:brightness-95 transition"
-              >
-                Delete Plan
-              </button>
+              />
             )}
           </div>
           <div className="flex-1 flex justify-between items-start">
@@ -433,12 +433,12 @@ export default function StudentProgramDetail() {
               <h3 className="text-[18px] font-bold text-[#23417d]">Curriculum Details</h3>
               <Legend />
             </div>
-            <button
+            <Button
+              content="Print"
+              color="#2854c5"
+              isFullWidth={false}
               onClick={() => window.print()}
-              className="bg-[#2854c5] text-white text-[13px] font-medium rounded-[4px] px-4 py-1.5 hover:brightness-95 transition"
-            >
-              Print
-            </button>
+            />
           </div>
         </div>
 
@@ -446,14 +446,14 @@ export default function StudentProgramDetail() {
         <div className="flex gap-6 items-start">
           {/* 左欄(固定寬) */}
           <div className="w-[430px] shrink-0 flex flex-col gap-5">
-            <ProgramSummaryCard detail={detail} />
+            {detail && <ProgramSummaryCard detail={detail} />}
             <AddPlannedCourseCard onAdd={handleAddPlanned} />
           </div>
 
           {/* 右欄(伸縮) */}
           <div className="flex-1 flex flex-col gap-4">
             {/* 只顯示「有課的」rule 卡(例如 Free Elective 沒課就只在左邊顯示「-」圈) */}
-            {detail.rules
+            {detail?.rules
               .filter((rule) => rule.courses.length > 0)
               .map((rule) => (
                 <RuleCard

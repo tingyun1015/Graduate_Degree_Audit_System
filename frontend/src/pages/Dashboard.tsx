@@ -5,6 +5,7 @@ import type { Dashboard, Program, ProgramOption } from '../types';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Tag from '../components/Tag';
+import Button from '../components/Button';
 
 // ─────────────────────────────────────────────
 // 小工具:算出單一 program 的 earned / required 總和
@@ -67,12 +68,13 @@ function ProgressRing({ earned, required }: { earned: number; required: number }
 function DetailButton({ programId }: { programId: number }) {
   const navigate = useNavigate();
   return (
-    <button
+    <Button 
+      content="Detail"
+      color="#2854c5"
+      hasArrow={true}
+      isFullWidth={false}
       onClick={() => navigate(`/program/${programId}`)}
-      className="bg-[#2854c5] text-white text-sm font-medium px-4 py-1.5 rounded hover:bg-[#1f43a0] transition-colors"
-    >
-      Detail →
-    </button>
+    />
   );
 }
 
@@ -106,7 +108,7 @@ function NewProgramModal({
           <h3 className="text-lg font-bold text-[#1f3a5f]">+ New Program</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 text-xl leading-none"
+            className="text-gray-400 hover:text-gray-700 text-xl leading-none cursor-pointer"
           >
             ✕
           </button>
@@ -368,7 +370,7 @@ export default function Dashboard() {
             {/* 新增學程:點擊開啟 + New Program 視窗 */}
             <button
               onClick={openAddProgram}
-              className="border-2 border-dashed border-[#d9d4cc] rounded-lg px-6 py-5 flex items-center justify-center text-gray-500 hover:border-[#2854c5] hover:text-[#2854c5] transition-colors"
+              className="border-2 border-dashed border-[#d9d4cc] rounded-lg px-6 py-5 flex items-center justify-center text-gray-500 hover:border-[#2854c5] hover:text-[#2854c5] transition-colors cursor-pointer"
             >
               + Add Program
             </button>
