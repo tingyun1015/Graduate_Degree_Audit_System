@@ -3,6 +3,9 @@ import Modal from './Modal';
 import Button from './Button';
 import { addNewProgram } from '../api';
 import type { Program } from '../types';
+import { useAuthStore } from '../store/useAuthStore';
+import { useAdminStore } from '../store/useAdminStore';
+import { useToastStore } from '../store/useToastStore';
 
 interface AddProgramModalProps {
   isOpen: boolean;
@@ -14,22 +17,26 @@ interface AddProgramModalProps {
 export default function AddProgramModal({ isOpen, onClose, departmentId, onSuccess }: AddProgramModalProps) {
   const [programName, setProgramName] = useState('');
   const [programType, setProgramType] = useState('Major');
-  const [collegeName, setCollegeName] = useState('College of Information');
   const [isLoading, setIsLoading] = useState(false);
+
+  const { userId } = useAuthStore();
+  const { activeDepartment } = useAdminStore();
+  const showToast = useToastStore((state) => state.showToast);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await addNewProgram(departmentId, {
+      await addNewProgram(Number(userId), Number(activeDepartment?.id), {
         type: programType.toLowerCase(),
         title: programName
       });
+      showToast("Program added successfully!", "success");
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Failed to add program:", error);
-      alert("Failed to add program. Please try again.");
+      showToast("Failed to add program. Please try again.", "error");
     } finally {
       setIsLoading(false);
     }

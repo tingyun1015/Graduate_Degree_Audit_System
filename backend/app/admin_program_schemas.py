@@ -7,6 +7,7 @@ class AdminProgramSummary(BaseModel):
     id: int
     type: str | None
     title: str
+    is_published: bool
 
 
 class AdminCourseInRule(BaseModel):

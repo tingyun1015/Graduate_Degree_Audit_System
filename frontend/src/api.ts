@@ -259,9 +259,20 @@ export async function getAdminProgramList(adminId: number, departmentId: number)
   });
 }
 
-export async function addNewProgram(adminId: number, program: Program): Promise<ProgramDetailResponse> {
-  // TODO
-  return fetch(`${BASE_URL}/api/admin/${adminId}/programs`, {
+export async function getProgramDetail(programId: number): Promise<ProgramDetailResponse> {
+  return await fetch(`${BASE_URL}/api/programs/${programId}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法取得 program detail 資料');
+    }
+    return res.json();
+  });
+}
+
+export async function addNewProgram(adminId: number,departmentId: number, program: Program): Promise<ProgramDetailResponse> {
+  return fetch(`${BASE_URL}/api/admin/departments/${departmentId}/programs?user_id=${adminId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(program),

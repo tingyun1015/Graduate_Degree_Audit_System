@@ -11,18 +11,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { useAdminStore } from '../store/useAdminStore';
 
-
-// 小工具：取得對應標籤的背景色
-function getTagColor(type: string) {
-    switch (type) {
-        case 'Major': return '#ffb6b0';
-        case 'Minor': return '#c2d3ff';
-        case 'Program': return '#97ffb3';
-        case 'Planned': return '#d0cac2';
-        default: return '#cccccc';
-    }
-}
-
 export default function AdminProgramList() {
     const { userId, departmentList: departments } = useAuthStore();
     const { activeDepartment, setActiveDepartment } = useAdminStore();
@@ -54,8 +42,6 @@ export default function AdminProgramList() {
     return (
         <div className="min-h-screen flex flex-col bg-[#fff8ef]">
             <Header />
-            
-            {/* 畫面主體 (側邊欄 + 右側內容) */}
             <div className="flex-1 flex w-full mx-auto">
                 <AdminSidebar activeTab="program" />
                 
@@ -69,16 +55,14 @@ export default function AdminProgramList() {
                                 <h1 className="text-[19px] font-semibold text-[#23417d]">Programs</h1>
                             </div>
                             
-                            {/* Department Selector */}
                             <div className="relative">
                                 {activeDepartment ? (
                                     <div 
                                         className="flex items-center gap-3 cursor-pointer group bg-white border border-[#ccc] px-4 py-1.5 rounded-[4px] hover:border-[#23417d] transition-colors"
                                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                     >
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] text-gray-500 leading-tight">{activeDepartment.college_name}</span>
-                                            <span className="text-[14px] text-[#23417d] font-semibold leading-tight">
+                                        <div className="flex flex-col w-[280px] py-2">
+                                            <span className="text-[14px] text-[#23417d] font-semibold leading-tight truncate">
                                                 {activeDepartment.name}
                                             </span>
                                         </div>
@@ -98,7 +82,7 @@ export default function AdminProgramList() {
                                         {departments.map(dept => (
                                             <div 
                                                 key={dept.id}
-                                                className={`px-4 py-2 cursor-pointer transition-colors hover:bg-[#fff8ef] ${
+                                                className={`px-4 py-4 cursor-pointer transition-colors hover:bg-[#fff8ef] ${
                                                     activeDepartment?.id === dept.id ? 'bg-[#fcf9f5] border-l-2 border-[#23417d]' : 'border-l-2 border-transparent'
                                                 }`}
                                                 onClick={() => {
@@ -106,7 +90,6 @@ export default function AdminProgramList() {
                                                     setIsDropdownOpen(false);
                                                 }}
                                             >
-                                                <div className="text-[10px] text-gray-500 mb-0.5 truncate">{dept.college_name}</div>
                                                 <div className="text-[13px] text-[#23417d] font-semibold line-clamp-2">{dept.name}</div>
                                             </div>
                                         ))}
@@ -120,10 +103,9 @@ export default function AdminProgramList() {
                     <div className="grid lg:grid-cols-2 gap-x-[40px] gap-y-[20px] w-full md:grid-cols-1">
                         {data.map((prog) => (
                             <div key={prog.id} className="bg-white border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center gap-[10px] w-full min-h-[126px]">
-                                <div className="flex flex-col items-start gap-[5px] flex-1">
+                                <div className="flex flex-col items-start gap-[5px] flex-1 justify-center">
                                     <Tag 
                                         content={prog.type} 
-                                        color={getTagColor(prog.type)} 
                                         textColor="black"
                                     />
                                     <h4 className="text-[#23417d] text-[14.4px] font-bold mt-1 leading-tight">{prog.title}</h4>

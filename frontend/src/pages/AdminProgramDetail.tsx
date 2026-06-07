@@ -40,15 +40,21 @@ export default function AdminProgramDetail() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const { userId } = useAuthStore();
     const [isDeleting, setIsDeleting] = useState(false);
-    const [isEditRuleModalOpen, setIsEditRuleModalOpen] = useState(false);
+    const [isEditElectiveModalOpen, setIsEditElectiveModalOpen] = useState(false);
+    const [isEditFreeElectiveModalOpen, setIsEditFreeElectiveModalOpen] = useState(false);
     const [isAddCourseModalOpen, setIsAddCourseModalOpen] = useState(false);
     const [isRemoveCourseModalOpen, setIsRemoveCourseModalOpen] = useState(false);
     const [courseToRemove, setCourseToRemove] = useState<{ruleId: number, courseId: number, courseCode: string, courseName: string} | null>(null);
     const [selectedRuleId, setSelectedRuleId] = useState<number | null>(null);
-    const [selectedRuleCredits, setSelectedRuleCredits] = useState<number>(0);
+    const [electiveRuleCredits, setElectiveRuleCredits] = useState<number>(0);
+    const [freeElectiveRuleCredits, setFreeElectiveRuleCredits] = useState<number>(0);
     const { id: programId } = useParams();
     const navigate = useNavigate();
     const showToast = useToastStore((state) => state.showToast);
+
+    const showTag = (type: string) => {
+        return type === "University Requirements" ? false : true;
+    }
 
     const fetchProgramData = () => {
         if (!programId) return;
@@ -115,7 +121,7 @@ export default function AdminProgramDetail() {
                             </svg>
                             <h1 className="text-[19px] font-semibold text-[#23417d] flex items-center">
                                 {programDetail.title}
-                                <span className="ml-3"><Tag content={programDetail.type} /></span>
+                                <span className="ml-3 flex items-center">{showTag(programDetail.type) && <Tag content={programDetail.type} />}</span>
                             </h1>
                         </div>
                         <Button 
@@ -135,7 +141,7 @@ export default function AdminProgramDetail() {
                         <div className="bg-white border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-end justify-between">
                             <span className="text-[#23417d] text-[15px] font-bold">Required</span>
                             <span className="text-[#23417d] text-[15px] font-bold">
-                                {programRules?.find(r => r.type === 'core')?.courses?.length || 0} courses
+                                {programRules?.find(r => r.type === 'core')?.courses?.reduce((acc, course) => acc + Number(course.credits), 0)} cr
                             </span>
                         </div>
                         
@@ -150,8 +156,8 @@ export default function AdminProgramDetail() {
                                       const r = programRules?.find(r => r.type === 'elective');
                                       if (r) {
                                           setSelectedRuleId(r.id);
-                                          setSelectedRuleCredits(r.required_credits || 0);
-                                          setIsEditRuleModalOpen(true);
+                                          setElectiveRuleCredits(r.required_credits || 0);
+                                          setIsEditElectiveModalOpen(true);
                                       }
                                   }}
                                 >
@@ -171,8 +177,8 @@ export default function AdminProgramDetail() {
                                       const r = programRules?.find(r => r.type === 'free_elective');
                                       if (r) {
                                           setSelectedRuleId(r.id);
-                                          setSelectedRuleCredits(r.required_credits || 0);
-                                          setIsEditRuleModalOpen(true);
+                                          setFreeElectiveRuleCredits(r.required_credits || 0);
+                                          setIsEditFreeElectiveModalOpen(true);
                                       }
                                   }}
                                 >
@@ -236,8 +242,7 @@ export default function AdminProgramDetail() {
 
                     </div>
 
-                    {/* 最下方的刪除按鈕 */}
-                    <div className="w-full max-w-[1000px] flex justify-center mb-8">
+                    {!programDetail.is_published && <div className="w-full max-w-[1000px] flex justify-center mb-8">
                         <Button 
                             content="Delete Program"
                             color="#bf3c32"
@@ -245,7 +250,7 @@ export default function AdminProgramDetail() {
                             isFullWidth={false}
                             onClick={() => setIsDeleteModalOpen(true)}
                         />
-                    </div>
+                    </div>}
 
                 </main>
             </div>
@@ -280,10 +285,22 @@ export default function AdminProgramDetail() {
                 </div>
             </Modal>
             <EditProgramRuleModal
-                isOpen={isEditRuleModalOpen}
-                onClose={() => setIsEditRuleModalOpen(false)}
+                isOpen={isEditElectiveModalOpen}
+                onClose={() => setIsEditElectiveModalOpen(false)}
                 ruleId={selectedRuleId}
-                currentCredits={selectedRuleCredits}
+                currentCredits={electiveRuleCredits}
+                onSuccess={() => {
+                    showToast("Rule updated successfully.", "success");
+                    fetchProgramData();
+                }}
+                onError={(msg) => showToast(msg, "error")}
+            />
+
+            <EditProgramRuleModal
+                isOpen={isEditFreeElectiveModalOpen}
+                onClose={() => setIsEditFreeElectiveModalOpen(false)}
+                ruleId={selectedRuleId}
+                currentCredits={freeElectiveRuleCredits}
                 onSuccess={() => {
                     showToast("Rule updated successfully.", "success");
                     fetchProgramData();

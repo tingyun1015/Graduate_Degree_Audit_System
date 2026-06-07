@@ -63,7 +63,7 @@ def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
         sub_rules, _ = build_program_sub_rules(program, passed_course_credits)
 
         is_main_major = bool(
-            is_main_major_program(program)
+            is_main_major_program(student, program)
             or (primary_program and program.program_id == primary_program.program_id)
         )
         if is_university_program(program):

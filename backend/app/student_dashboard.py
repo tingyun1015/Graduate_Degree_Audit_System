@@ -32,13 +32,16 @@ def is_university_program(program: Program) -> bool:
     return "general" in fields or "university" in fields
 
 
-def is_main_major_program(program: Program) -> bool:
-    return (program.program_type or "").strip().lower() == "main major"
+def is_main_major_program(student: Student, program: Program) -> bool:
+    enrollment = next((e for e in student.enrollments if e.program_id == program.program_id and (program.program_type or "").strip().lower() == "major"), None)
+    if enrollment and enrollment.is_main:
+        return True
+    return False
 
 
 def choose_primary_program(student: Student, active_programs: list[Program]) -> Program | None:
     explicit_main_major = next(
-        (program for program in active_programs if is_main_major_program(program)),
+        (program for program in active_programs if is_main_major_program(student, program)),
         None,
     )
     if explicit_main_major:

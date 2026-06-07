@@ -64,6 +64,8 @@ export interface ProgramInfo {
   type: string;
   title: string;
   college: string;
+  is_published: boolean;
+  sub_rules: SubRule[];
 }
 
 export interface AdminProgramListResponse {
@@ -85,10 +87,10 @@ export interface ProgramDetailResponse {
 
 export interface ProgramRule {
   id: number;
-  type: string;
+  type: 'core' | 'elective' | 'free_elective';
   name: string;
-  courses: Course[] | null;
-  required_credits: number | null;
+  courses?: Course[];
+  requiredCredits: number | null;
 }
   
 
@@ -121,7 +123,6 @@ export type CourseStatus = 'done' | 'planned' | 'missing';
 
 export interface StudentCourseRow {
   status: CourseStatus;
-  courseId: number;   // 加/刪計畫課時要用,對應 audit 的 course_id
   code: string;
   name: string;
   credits: string;
@@ -142,50 +143,4 @@ export interface StudentProgramDetailData {
   isEnrolled: boolean;   // 對應後端 enrollment 的 is_enrolled
                          // false = 學生自己加的計畫(planned),會顯示 Planned 標籤 + Delete Plan
   rules: StudentProgramRule[];
-}
-
-
-// Student Program Audit(學生端 audit API 回傳,對應後端 StudentProgramAuditResponse)
-
-export interface AuditCourse {
-  course_id: number;
-  course_code: string;
-  course_name: string;
-  credits: number;
-}
-
-export interface AuditRule {
-  rule_id: number;
-  rule_name: string;
-  rule_type: string;        // core / elective / free_elective
-  required_credits: number;
-  earned_credits: number;
-  remaining_credits: number;
-  counted_courses: AuditCourse[];  // 已修過(is_passed)→ 前端的 done
-  planned_courses: AuditCourse[];  // 已加但未修過 → 前端的 planned
-  missing_courses: AuditCourse[];  // 規則需要但沒修也沒加 → 前端的 missing
-}
-
-export interface Audit {
-  student_id: number;
-  program_id: number;
-  program_name: string;
-  program_type: string | null;
-  can_graduate: boolean;
-  rules: AuditRule[];
-}
-
-// 所有「會改資料」的 student endpoint 共用的回傳(對應後端 StudentActionResponse)
-export interface StudentActionResponse {
-  success: boolean;
-  message: string;
-}
-
-// 學生的單筆 program enrollment(對應後端 EnrollmentItemResponse)
-// audit 回應沒有 is_enrolled,要靠這支來判斷 planned(false)/enrolled(true)
-export interface StudentEnrollment {
-  program_id: number;
-  program_name: string;
-  program_type: string | null;
-  is_enrolled: boolean;
 }
