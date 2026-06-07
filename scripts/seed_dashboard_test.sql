@@ -7,10 +7,12 @@ INSERT INTO departments (dept_id, dept_name) VALUES
 
 INSERT INTO users (user_id, email, password_hash, role) VALUES
     (1, 'student001@university.edu.tw', 'my_password', 'student'),
-    (2, 'admin001@university.edu.tw', 'admin_password', 'staff');
+    (2, 'admin001@university.edu.tw', 'admin_password', 'staff'),
+    (3, 'student002@university.edu.tw', 'my_password', 'student');
 
 INSERT INTO students (student_id, name, enrollment_year, type, dept_id) VALUES
-    (1, '王小明', 2023, 'full_time', 1);
+    (1, '王小明', 2023, 'full_time', 1),
+    (3, '李小八', 2024, 'full_time', 1);
 
 INSERT INTO staff (staff_id, name) VALUES
     (2, '系統管理員');
@@ -31,7 +33,10 @@ INSERT INTO programs (
 INSERT INTO enrollments (student_id, program_id, is_enrolled) VALUES
     (1, 101, true),
     (1, 102, true),
-    (1, 103, true);
+    (1, 103, true),
+    -- 李小八:只選 101 + 102,故意不選 103(Advertising)→ 留著測 + Add Program
+    (3, 101, true),
+    (3, 102, true);
 
 INSERT INTO requirement_rules (
     rule_id,
@@ -137,4 +142,19 @@ INSERT INTO takes (
     (23, 1, 323, '2025-1', 94, true),
     (24, 1, 324, '2025-1', 94, true),
     (25, 1, 325, '2025-2', 94, true),
-    (26, 1, 326, '2025-2', 94, true);
+    (26, 1, 326, '2025-2', 94, true),
+    -- ── 李小八(student 3,修課中)── 故意留 planned / missing 方便測詳細頁
+    -- done(修過):301,302,303,306,307,308,314,317
+    (27, 3, 301, '2024-1', 90, true),
+    (28, 3, 302, '2024-1', 88, true),
+    (29, 3, 303, '2024-2', 85, true),
+    (31, 3, 306, '2024-1', 92, true),
+    (32, 3, 307, '2024-2', 90, true),
+    (33, 3, 308, '2025-1', 87, true),
+    (35, 3, 314, '2025-1', 91, true),
+    (37, 3, 317, '2025-1', 89, true),
+    -- planned(is_passed=false,grade 留 NULL):304,309,315
+    (30, 3, 304, '2024-2', NULL, false),
+    (34, 3, 309, '2025-1', NULL, false),
+    (36, 3, 315, '2025-2', NULL, false);
+    -- missing(完全不選,不建 takes):305,310,311,312,313,316,318
