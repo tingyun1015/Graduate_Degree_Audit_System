@@ -11,17 +11,17 @@ export default function Header() {
 
     const handleLogout = async () => {
         try {
+            logout();
             if (userId) {
                 await apiLogout(userId);
             }
         } catch (error) {
             console.error('Logout failed:', error);
         } finally {
-            logout();
             if (isAdmin) {
-                navigate('/admin/login');
+                navigate('/admin');
             } else {
-                navigate('/login');
+                navigate('/');
             }
         }
     };
@@ -30,7 +30,7 @@ export default function Header() {
         <header className="bg-[#1f3a5f] text-white flex items-center justify-between px-8 h-16 shrink-0 sticky top-0 z-50">
             <div className="flex items-center gap-2">
                 <Logo className="text-white fill-current" />
-                {isAdmin && <Tag content='Admin/Staff' />}
+                {isAdmin && <Tag content='Admin/Staff' color="#ffb6b0" textColor="#2a2a2a" />}
             </div>
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">

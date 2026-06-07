@@ -5,6 +5,7 @@ import Tag from '../components/Tag';
 import Button from '../components/Button';
 import { loginUser } from '../api';
 import { LoginState } from '../types';
+import { useAuthStore } from '../store/useAuthStore';
 
 const initialState: LoginState = {
   success: false,
@@ -15,6 +16,7 @@ const initialState: LoginState = {
 
 export default function Login() {
   const navigate = useNavigate();
+  const { loginStudent, loginAdmin } = useAuthStore();
 
   async function login(previousState: LoginState, formData: FormData): Promise<LoginState> {
     const account = formData.get("account") as string;
@@ -28,8 +30,7 @@ export default function Login() {
       const result = await loginUser(account, password);
 
       if (result.success) {
-        localStorage.setItem('student_id', String(result.id));
-        localStorage.setItem('user_name', result.name || "");
+        loginStudent(result.id, result.name || "");
         navigate("/dashboard");
         return { success: true, message: "登入成功", account, password };
       }

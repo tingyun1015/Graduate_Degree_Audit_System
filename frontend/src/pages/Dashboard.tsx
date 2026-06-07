@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Tag from '../components/Tag';
 import Button from '../components/Button';
+import { useAuthStore } from '../store/useAuthStore';
 
 // ─────────────────────────────────────────────
 // 小工具:算出單一 program 的 earned / required 總和
@@ -159,19 +160,21 @@ export default function Dashboard() {
   const [isModalOpen, setModalOpen] = useState(false);
   const [programOptions, setProgramOptions] = useState<ProgramOption[]>([]);
 
-  // 從登入時存進 localStorage 的資料讀取;
-  // 若沒有(例如直接打開 /dashboard 沒先登入),就退回測試用的 1 號 / 王小明
-  const studentId = Number(localStorage.getItem('student_id')) || 1;
-  const userName = localStorage.getItem('user_name') || '王小明';
+  const { userId: studentId } = useAuthStore();
 
-  // 抽成函式,加入新 program 後可重抓刷新
-  const loadDashboard = useCallback(() => {
-    getDashboard(studentId).then(setData);
-  }, [studentId]);
+  const loadDashboard = () => {
+    getDashboard(studentId!)
+      .then(setData)
+      .catch((err) => {
+        console.error(err);
+        window.alert('無法取得 dashboard 資料');
+        
+      })
+  };
 
   useEffect(() => {
     loadDashboard();
-  }, [loadDashboard]);
+  }, []);
 
   if (!data) {
     return <p className="p-5">載入中...</p>;
@@ -229,7 +232,7 @@ export default function Dashboard() {
       <Header />
 
       {/* 主內容區(置中、限制最大寬度) */}
-      <main className="flex-1 w-full max-w-[1120px] mx-auto px-6 py-8 flex flex-col gap-6">
+      <main className="flex-1 w-full mx-auto px-20 py-8 flex flex-col gap-6">
 
         {/* ② 總覽卡片 */}
         <section className="bg-white border border-[#e5e0d8] rounded-lg px-8 py-6 flex items-center justify-between flex-wrap gap-4">
@@ -307,11 +310,7 @@ export default function Dashboard() {
           >
             {/* 左:標籤 + 名稱 + 學院 */}
             <div className="w-[260px] shrink-0">
-              <Tag 
-                content={`★ ${program.program_type ?? ''}`} 
-                color="#ffece9" 
-                textColor="#c0392b"
-              />
+              <Tag content={program.program_type ?? ''} />
               <h4 className="text-[#1f3a5f] font-bold mt-2">{program.program_name}</h4>
               {program.college_name && (
                 <p className="text-xs text-gray-500 mt-0.5">{program.college_name}</p>
@@ -352,9 +351,7 @@ export default function Dashboard() {
                 >
                   <div className="flex-1">
                     <Tag 
-                      content={program.program_type ?? ''} 
-                      color="#e8edf7" 
-                      textColor="#2854c5"
+                      content={program.program_type ?? ''}
                     />
                     <h4 className="text-[#1f3a5f] font-bold mt-2">{program.program_name}</h4>
                     {program.college_name && (

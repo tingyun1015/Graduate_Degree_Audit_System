@@ -35,8 +35,8 @@ INSERT INTO enrollments (student_id, program_id, is_enrolled, is_main) VALUES
     (1, 102, true, true),
     (1, 103, true, false),
     -- 李小八:只選 101 + 102,故意不選 103(Advertising)→ 留著測 + Add Program
-    (3, 101, true, false),
-    (3, 102, true, true);
+    (3, 101, true, true),
+    (3, 102, true, false);
 
 INSERT INTO requirement_rules (
     rule_id,

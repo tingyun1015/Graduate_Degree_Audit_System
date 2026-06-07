@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 import AdminSidebar from "../components/AdminSidebar";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
-import { getAdminProgramDetail, deleteProgram, removeCourseFromProgramRule } from "../api";
+import { getAdminProgramDetail, deleteProgram, removeCourseFromProgramRule, publishProgram } from "../api";
 import type { ProgramInfo, ProgramRule, Course } from "../types";
 import { useParams, useNavigate } from "react-router-dom";
 import EditProgramRuleModal from "../components/EditProgramRuleModal";
@@ -40,6 +40,8 @@ export default function AdminProgramDetail() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const { userId } = useAuthStore();
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+    const [isPublishing, setIsPublishing] = useState(false);
     const [isEditElectiveModalOpen, setIsEditElectiveModalOpen] = useState(false);
     const [isEditFreeElectiveModalOpen, setIsEditFreeElectiveModalOpen] = useState(false);
     const [isAddCourseModalOpen, setIsAddCourseModalOpen] = useState(false);
@@ -87,6 +89,26 @@ export default function AdminProgramDetail() {
         }
     };
 
+    const handlePublishToggle = async () => {
+        if (!programId || !programDetail) return;
+        setIsPublishing(true);
+        try {
+            const res = await publishProgram(Number(userId), Number(programId), !programDetail.is_published);
+            if (res.success) {
+                showToast(res.message, 'success');
+                fetchProgramData(); // Refresh to get updated is_published state
+            } else {
+                showToast(res.message || 'Failed to update publish status', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to update publish status:', error);
+            showToast('Failed to update publish status', 'error');
+        } finally {
+            setIsPublishing(false);
+            setIsPublishModalOpen(false);
+        }
+    };
+
     const handleDeleteProgram = async () => {
         if (!programId) return;
         setIsDeleting(true);
@@ -125,13 +147,12 @@ export default function AdminProgramDetail() {
                             </h1>
                         </div>
                         <Button 
-                            content="Print"
-                            color="#2854c5"
+                            content={programDetail.is_published ? "Unpublish" : "Publish"}
+                            color={programDetail.is_published ? "#bf3c32" : "#2854c5"}
                             hasArrow={false}
                             isFullWidth={false}
                             onClick={() => {
-                                // TODO: print the report
-                                window.print();
+                                setIsPublishModalOpen(true);
                             }}
                         />
                     </div>
@@ -319,9 +340,10 @@ export default function AdminProgramDetail() {
                 onError={(msg) => showToast(msg, "error")}
             />
 
+            {/* Remove Course 確認彈窗 */}
             <Modal 
                 isOpen={isRemoveCourseModalOpen} 
-                onClose={() => setIsRemoveCourseModalOpen(false)} 
+                onClose={() => setIsRemoveCourseModalOpen(false)}
                 title="Remove Course"
             >
                 <div className="flex flex-col gap-6">
@@ -342,6 +364,39 @@ export default function AdminProgramDetail() {
                             variant="solid"
                             isFullWidth={false}
                             onClick={confirmRemoveCourse}
+                        />
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Publish Toggle 確認彈窗 */}
+            <Modal
+                isOpen={isPublishModalOpen}
+                onClose={() => !isPublishing && setIsPublishModalOpen(false)}
+                title={programDetail?.is_published ? "Unpublish Program" : "Publish Program"}
+            >
+                <div className="flex flex-col gap-6">
+                    <p className="text-[14px] text-gray-700">
+                        {programDetail?.is_published 
+                            ? `Are you sure you want to unpublish ${programDetail.title}? Students will no longer be able to see or add this program.`
+                            : `Are you sure you want to publish ${programDetail?.title}? Once published, students can see and add this program.`}
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <Button 
+                            content="Cancel"
+                            color="#6b7280"
+                            variant="outline"
+                            isFullWidth={false}
+                            onClick={() => setIsPublishModalOpen(false)} 
+                            disabled={isPublishing}
+                        />
+                        <Button 
+                            content={isPublishing ? "Processing..." : "Confirm"} 
+                            color={programDetail?.is_published ? "#bf3c32" : "#2854c5"} 
+                            variant="solid"
+                            isFullWidth={false}
+                            onClick={handlePublishToggle} 
+                            disabled={isPublishing}
                         />
                     </div>
                 </div>

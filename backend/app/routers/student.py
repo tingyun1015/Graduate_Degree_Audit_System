@@ -187,11 +187,28 @@ def get_student_program_audit(
             )
         )
 
+    active_programs = get_active_programs(student)
+    primary_program = get_primary_program(student, active_programs)
+
+    is_main_major = bool(
+        is_main_major_program(student, program)
+        or (primary_program and program.program_id == primary_program.program_id)
+    )
+
+    if is_university_program(program):
+        program_type = "University Requirements"
+    elif is_main_major:
+        program_type = "Main Major"
+    elif not enrollment.is_enrolled:
+        program_type = "Planned"
+    else:
+        program_type = program.program_type
+
     return StudentProgramAuditResponse(
         student_id=student_id,
         program_id=program.program_id,
         program_name=program.program_name,
-        program_type=program.program_type,
+        program_type=program_type,
         can_graduate=program_can_graduate,
         rules=audit_rules,
     )

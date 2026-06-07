@@ -45,7 +45,7 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-[#fff8ef] flex flex-col items-center justify-center font-sans p-4">
       <div className="bg-white border border-[#ccc] shadow-[3px_4px_3px_rgba(0,0,0,0.06)] rounded-[4px] w-full max-w-[494px] px-[40px] py-[55px] flex flex-col items-center">
         <div className="flex flex-col items-center gap-[9px] mb-[30px]">
-          <Tag content="Admin/Staff" color="#ffb6b0" />
+          <Tag content="Admin/Staff" color="#ffb6b0" textColor="#2a2a2a"  />
           <Logo />
         </div>
 

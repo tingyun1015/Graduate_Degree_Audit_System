@@ -67,7 +67,7 @@ def admin_login(payload: LoginRequest, db: Session = Depends(get_db)):
 
     departments = db.query(Department).all()
     department_list = [
-        DepartmentInfo(id=d.dept_id, name=d.dept_name)
+        DepartmentInfo(id=d.dept_id, name=d.dept_name, college_name="")
         for d in departments
     ]
 

@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Tag from '../components/Tag';
 import Button from '../components/Button';
+import Modal from '../components/Modal';
 import {
   getStudentAudit,
   getStudentEnrollments,
@@ -20,6 +21,8 @@ import type {
   StudentProgramRule,
   StudentProgramDetailData,
 } from '../types';
+import { useAuthStore } from '../store/useAuthStore';
+import { useToastStore } from '../store/useToastStore';
 
 // ─────────────────────────────────────────────
 // 課程狀態 → 圖示/顏色/動作 的對照表
@@ -60,8 +63,8 @@ function Legend() {
   return (
     <div className="flex gap-3 text-[10.5px] font-bold mt-1">
       <span className="text-[#00836b]">✓ Done</span>
-      <span className="text-black">◐ Planned</span>
-      <span className="text-black">○ Missing</span>
+      <span className="text-gray-600">◐ Planned</span>
+      <span className="text-gray-600">○ Missing</span>
     </div>
   );
 }
@@ -88,7 +91,7 @@ function CourseRow({
       <span className="w-[75px] font-semibold text-[11px] shrink-0">{course.term}</span>
       {/* done 沒有動作;missing→add(加計畫)、planned→remove(移除計畫) */}
       {course.status === 'done' ? (
-        <span className="w-[50px] shrink-0" />
+        <span className="w-[50px] text-right text-[11.6px] shrink-0 text-gray-500">-</span>
       ) : (
         <button
           onClick={() =>
@@ -127,7 +130,7 @@ function RuleCard({
         <div className="flex justify-between items-end">
           <span className="text-[15px] font-bold text-[#23417d]">{rule.name}</span>
           <span className="text-[15px] font-bold text-[#23417d]">
-            {rule.earned}{planned_credit > 0 && <span className="text-gray-600"> + {planned_credit}</span>} / {rule.required}
+            {rule.earned}{planned_credit > 0 && <span className="text-gray-500"> + {planned_credit} (planned)</span>} / {rule.required}
           </span>
         </div>
         {/* 課程列清單(收合時隱藏) */}
@@ -142,7 +145,7 @@ function RuleCard({
       {/* 展開/收合 footer */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full border-t border-[#d9d9d9] pt-1 text-center text-[10px] font-medium text-[#23417d] cursor-pointer hover:opacity-70"
+        className="w-full border-t border-[#d9d9d9] pt-1 text-center text-[12px] font-medium text-[#23417d] cursor-pointer hover:opacity-70"
       >
         {expanded ? 'collapse ▴' : 'expand ▾'}
       </button>
@@ -150,39 +153,18 @@ function RuleCard({
   );
 }
 
-// ─────────────────────────────────────────────
-// 左欄:Program 摘要卡。圓環直接從 rules 算出來(每個 rule 一個圈)
-// ─────────────────────────────────────────────
-// 標籤樣式:planned(is_enrolled=false)→灰色 Planned;否則顯示類型
-// Main Major→粉紅★ / Minor 等→淺藍(跟 Dashboard 一致)
-function tagStyleFor(detail: StudentProgramDetailData): {
-  content: string;
-  color: string;
-  textColor: string;
-} {
-  if (!detail.isEnrolled) {
-    return { content: 'Planned', color: '#e4e4e4', textColor: '#555555' };
-  }
-  if (detail.programType === 'Main Major') {
-    return { content: `★ ${detail.programType}`, color: '#ffb6b0', textColor: '#000000' };
-  }
-  // Minor 及其他類型
-  return { content: detail.programType, color: '#e8edf7', textColor: '#2854c5' };
-}
-
 function ProgramSummaryCard({ detail }: { detail: StudentProgramDetailData }) {
-  const tag = tagStyleFor(detail);
   return (
     <section className="bg-white border border-[#cccccc] rounded-[4px] px-[30px] py-[25px] flex flex-col gap-5">
       {/* 標籤 + 標題 + 學院 */}
       <div className="flex flex-col items-start gap-[5px]">
-        <Tag content={tag.content} color={tag.color} textColor={tag.textColor} />
+        <Tag content={detail.programType} />
         <h2 className="text-[18px] font-bold text-[#23417d]">{detail.programName}</h2>
         <p className="text-[12px] text-black">{detail.collegeLine}</p>
       </div>
 
       {/* 圓環:每個 rule 一個。required 為 0 時顯示灰色「-」 */}
-      <div className="flex flex-wrap gap-x-[65px] gap-y-4">
+      <div className="flex flex-wrap gap-x-3 gap-y-4 justify-between">
         {detail.rules.map((rule) => {
           const hasReq = rule.required > 0;
           return (
@@ -324,16 +306,19 @@ export default function StudentProgramDetail() {
   const programId = Number(id);
 
   const navigate = useNavigate();
-  // 登入時存進 localStorage 的資料(跟 Dashboard 用同一組 key)
-  const studentId = Number(localStorage.getItem('student_id')) || 1;
-  const userName = localStorage.getItem('user_name') || '';
+  const { userId: studentId } = useAuthStore();
+  const showToast = useToastStore((state) => state.showToast);
+
+  const [isRemoveCourseModalOpen, setIsRemoveCourseModalOpen] = useState(false);
+  const [courseToRemove, setCourseToRemove] = useState<number | null>(null);
+  const [isDeletePlanModalOpen, setIsDeletePlanModalOpen] = useState(false);
 
   const [detail, setDetail] = useState<StudentProgramDetailData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // 抽成函式,加/刪計畫課之後可以重抓刷新
   const loadDetail = useCallback(() => {
-    // audit 沒有 is_enrolled,所以同時打 enrollments,用 program_id 對起來
+    if (studentId === null) return;
     Promise.all([
       getStudentAudit(studentId, programId),
       getStudentEnrollments(studentId),
@@ -345,7 +330,7 @@ export default function StudentProgramDetail() {
       })
       .catch((err) => {
         console.error(err);
-        setError('無法載入這個 program 的資料,請稍後再試');
+        setError(err instanceof Error ? err.message : '無法載入這個 program 的資料,請稍後再試');
       });
   }, [studentId, programId]);
 
@@ -358,29 +343,58 @@ export default function StudentProgramDetail() {
     try {
       const res = await addPlannedCourse(studentId, courseId);
       if (!res.success) {
-        window.alert(res.message || '加入失敗');
+        showToast(res.message || 'Failed to add planned course', 'error');
         return;
       }
+      showToast('Course added to plan', 'success');
       loadDetail();
     } catch (err) {
       console.error(err);
-      window.alert(err instanceof Error ? err.message : 'Failed to add planned course, please try again later');
+      showToast(err instanceof Error ? err.message : 'Failed to add planned course, please try again later', 'error');
     }
   };
 
-  // 從計畫移除一門 planned 課
-  const handleRemovePlanned = async (courseId: number) => {
-    if (!window.confirm('Remove the planned course?')) return;
+  // 從計畫移除一門 planned 課 (觸發 Modal)
+  const handleRemovePlanned = (courseId: number) => {
+    setCourseToRemove(courseId);
+    setIsRemoveCourseModalOpen(true);
+  };
+
+  // 確認移除 planned 課
+  const confirmRemovePlanned = async () => {
+    if (!courseToRemove) return;
     try {
-      const res = await deletePlannedCourse(studentId, courseId);
+      const res = await deletePlannedCourse(studentId, courseToRemove);
       if (!res.success) {
-        window.alert(res.message || 'remove failed');
+        showToast(res.message || 'Failed to remove planned course', 'error');
+        setIsRemoveCourseModalOpen(false);
         return;
       }
+      showToast('Planned course removed', 'success');
+      setIsRemoveCourseModalOpen(false);
       loadDetail();
     } catch (err) {
       console.error(err);
-      window.alert('Failed to remove planned course, please try again later');
+      showToast('Failed to remove planned course, please try again later', 'error');
+      setIsRemoveCourseModalOpen(false);
+    }
+  };
+
+  // 確認刪除整個學程計畫
+  const confirmDeletePlan = async () => {
+    try {
+      const res = await deleteStudentProgram(studentId, programId);
+      if (!res.success) {
+        showToast(res.message || 'Failed to delete plan, please try again later', 'error');
+        setIsDeletePlanModalOpen(false);
+        return;
+      }
+      showToast('Plan deleted successfully', 'success');
+      navigate('/dashboard');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to delete plan, please try again later', 'error');
+      setIsDeletePlanModalOpen(false);
     }
   };
 
@@ -392,15 +406,16 @@ export default function StudentProgramDetail() {
 
   return (
     <div className="min-h-screen bg-[#fff8ef] flex flex-col">
-      <Header userName={userName} />
+      <Header />
 
-      <main className="flex-1 w-full max-w-[1120px] mx-auto px-6 py-8 flex flex-col gap-6">
+      <main className="flex-1 w-full mx-auto px-20 py-8 flex flex-col gap-6">
         {/* 頂部列:鏡像兩欄對齊 —— 左欄上方 Back,右欄上方 Curriculum Details + Print */}
         <div className="flex gap-6 items-start">
           <div className="w-[430px] shrink-0 flex justify-between items-start">
             <Button
-              content="← Back"
+              content="Back"
               color="#2854c5"
+              hasLeftArrow={true}
               isFullWidth={false}
               onClick={() => navigate('/dashboard')}
             />
@@ -410,21 +425,7 @@ export default function StudentProgramDetail() {
                 content="Delete Plan"
                 color="#c0392b"
                 isFullWidth={false}
-                onClick={async () => {
-                  // 後端:DELETE /api/student/{sid}/programs/{pid}(只能刪 planned,已 enrolled 會被後端拒絕)
-                  if (!window.confirm('Are you sure you want to delete this plan?')) return;
-                  try {
-                    const res = await deleteStudentProgram(studentId, programId);
-                    if (!res.success) {
-                      window.alert(res.message || 'Failed to delete plan, please try again later');
-                      return;
-                    }
-                    navigate('/dashboard');
-                  } catch (err) {
-                    console.error(err);
-                    window.alert('Failed to delete plan, please try again later');
-                  }
-                }}
+                onClick={() => setIsDeletePlanModalOpen(true)}
               />
             )}
           </div>
@@ -468,6 +469,62 @@ export default function StudentProgramDetail() {
       </main>
 
       <Footer />
+
+      <Modal 
+        isOpen={isRemoveCourseModalOpen} 
+        onClose={() => setIsRemoveCourseModalOpen(false)} 
+        title="Remove Planned Course"
+      >
+        <div className="flex flex-col gap-6">
+          <p className="text-[14px] text-gray-700">
+            Are you sure you want to remove this planned course?
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button 
+              content="Cancel"
+              color="#6b7280"
+              variant="outline"
+              isFullWidth={false}
+              onClick={() => setIsRemoveCourseModalOpen(false)}
+            />
+            <Button 
+              content="Remove"
+              color="#bf3c32"
+              variant="solid"
+              isFullWidth={false}
+              onClick={confirmRemovePlanned}
+            />
+          </div>
+        </div>
+      </Modal>
+
+      <Modal 
+        isOpen={isDeletePlanModalOpen} 
+        onClose={() => setIsDeletePlanModalOpen(false)} 
+        title="Delete Plan"
+      >
+        <div className="flex flex-col gap-6">
+          <p className="text-[14px] text-gray-700">
+            Are you sure you want to delete this plan?
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button 
+              content="Cancel"
+              color="#6b7280"
+              variant="outline"
+              isFullWidth={false}
+              onClick={() => setIsDeletePlanModalOpen(false)}
+            />
+            <Button 
+              content="Delete"
+              color="#bf3c32"
+              variant="solid"
+              isFullWidth={false}
+              onClick={confirmDeletePlan}
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

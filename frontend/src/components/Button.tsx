@@ -2,13 +2,14 @@ interface ButtonProps {
     content: string;
     color?: string;
     hasArrow?: boolean;
+    hasLeftArrow?: boolean;
     isFullWidth?: boolean;
     onClick?: () => void;
     type?: 'button' | 'submit' | 'reset';
     variant?: 'solid' | 'outline';
 }
 
-export default function Button ({ content, color, hasArrow, isFullWidth = true, onClick, type = 'button', variant = 'solid' }: ButtonProps) {
+export default function Button ({ content, color, hasArrow, hasLeftArrow, isFullWidth = true, onClick, type = 'button', variant = 'solid' }: ButtonProps) {
     const sizeClasses = isFullWidth 
         ? "w-full h-[42px] text-[16px]" 
         : "text-[12px] font-semibold px-[12px] py-[9px] shrink-0";
@@ -40,6 +41,11 @@ export default function Button ({ content, color, hasArrow, isFullWidth = true, 
             className={`${baseClasses} ${variantClasses} ${sizeClasses}`}
             onClick={onClick}
         >
+            {hasLeftArrow && (
+                <span className="mr-2 transition-transform duration-200 group-hover:-translate-x-1">
+                    ←
+                </span>
+            )}
             {content}
             {hasArrow && (
                 <span className="ml-2 transition-transform duration-200 group-hover:translate-x-1">

@@ -77,6 +77,9 @@ export async function getStudentAudit(studentId: number, programId: number): Pro
     headers: { 'Content-Type': 'application/json' },
   }).then((res) => {
     if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error('You are not enrolled in this program. Please add it from the Dashboard first.');
+      }
       throw new Error('無法取得 audit 資料');
     }
     return res.json();
@@ -249,6 +252,19 @@ export async function getAdminProgramList(adminId: number, departmentId: number)
   }).then((res) => {
     if (!res.ok) {
       throw new Error('無法取得 program list 資料');
+    }
+    return res.json();
+  });
+}
+
+export async function publishProgram(adminId: number, programId: number, isPublished: boolean): Promise<{ success: boolean; message: string }> {
+  return await fetch(`${BASE_URL}/api/admin/programs/${programId}/publish?user_id=${adminId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ is_published: isPublished }),
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('Failed to publish program');
     }
     return res.json();
   });
