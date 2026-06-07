@@ -1,10 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Tag from '../components/Tag';
-import { getStudentProgramDetail } from '../api';
+import {
+  getStudentAudit,
+  getStudentEnrollments,
+  deleteStudentProgram,
+  addPlannedCourse,
+  deletePlannedCourse,
+  getCourses,
+} from '../api';
 import type {
+  Audit,
+  AuditCourse,
   CourseStatus,
   StudentCourseRow,
   StudentProgramRule,
@@ -59,7 +68,15 @@ function Legend() {
 // ─────────────────────────────────────────────
 // 小元件:課程一列。顏色由狀態決定;欄位用固定寬度排成表格狀
 // ─────────────────────────────────────────────
-function CourseRow({ course }: { course: StudentCourseRow }) {
+function CourseRow({
+  course,
+  onAdd,
+  onRemove,
+}: {
+  course: StudentCourseRow;
+  onAdd: (courseId: number) => void;
+  onRemove: (courseId: number) => void;
+}) {
   const meta = STATUS_META[course.status];
   return (
     <div className="flex items-center" style={{ color: meta.color }}>
@@ -68,12 +85,22 @@ function CourseRow({ course }: { course: StudentCourseRow }) {
       <span className="flex-1 font-semibold text-[11.4px] truncate">{course.name}</span>
       <span className="w-[55px] font-semibold text-[11.8px] shrink-0">{course.credits}</span>
       <span className="w-[75px] font-semibold text-[11px] shrink-0">{course.term}</span>
-      <span
-        className="w-[50px] text-right text-[11.6px] underline shrink-0 cursor-pointer"
-        style={{ color: meta.actionColor }}
-      >
-        {meta.action}
-      </span>
+      {/* done 沒有動作;missing→add(加計畫)、planned→remove(移除計畫) */}
+      {course.status === 'done' ? (
+        <span className="w-[50px] shrink-0" />
+      ) : (
+        <button
+          onClick={() =>
+            course.status === 'missing'
+              ? onAdd(course.courseId)
+              : onRemove(course.courseId)
+          }
+          className="w-[50px] text-right text-[11.6px] underline shrink-0 cursor-pointer hover:opacity-70"
+          style={{ color: meta.actionColor }}
+        >
+          {meta.action}
+        </button>
+      )}
     </div>
   );
 }
@@ -81,7 +108,16 @@ function CourseRow({ course }: { course: StudentCourseRow }) {
 // ─────────────────────────────────────────────
 // 小元件:一張 rule 卡(標題 + 分數 + 課程列 + 展開)
 // ─────────────────────────────────────────────
-function RuleCard({ rule }: { rule: StudentProgramRule }) {
+function RuleCard({
+  rule,
+  onAdd,
+  onRemove,
+}: {
+  rule: StudentProgramRule;
+  onAdd: (courseId: number) => void;
+  onRemove: (courseId: number) => void;
+}) {
+  const [expanded, setExpanded] = useState(true);
   return (
     <section className="bg-white border border-[#cccccc] rounded-[4px] px-[15px] pt-[15px] pb-[10px] flex flex-col gap-[14px]">
       <div className="flex flex-col gap-[15px]">
@@ -92,17 +128,22 @@ function RuleCard({ rule }: { rule: StudentProgramRule }) {
             {rule.earned} / {rule.required}
           </span>
         </div>
-        {/* 課程列清單 */}
-        <div className="flex flex-col gap-[5px]">
-          {rule.courses.map((course) => (
-            <CourseRow key={course.code} course={course} />
-          ))}
-        </div>
+        {/* 課程列清單(收合時隱藏) */}
+        {expanded && (
+          <div className="flex flex-col gap-[5px]">
+            {rule.courses.map((course) => (
+              <CourseRow key={course.courseId} course={course} onAdd={onAdd} onRemove={onRemove} />
+            ))}
+          </div>
+        )}
       </div>
-      {/* 展開 footer */}
-      <div className="border-t border-[#d9d9d9] pt-1 text-center text-[10px] font-medium text-[#23417d] cursor-pointer">
-        expand ▾
-      </div>
+      {/* 展開/收合 footer */}
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full border-t border-[#d9d9d9] pt-1 text-center text-[10px] font-medium text-[#23417d] cursor-pointer hover:opacity-70"
+      >
+        {expanded ? 'collapse ▴' : 'expand ▾'}
+      </button>
     </section>
   );
 }
@@ -157,26 +198,117 @@ function ProgramSummaryCard({ detail }: { detail: StudentProgramDetailData }) {
 }
 
 // ─────────────────────────────────────────────
-// 左欄:Add Planned Course 卡(搜尋框 + Add 按鈕)
-// 後端還沒有「加選計畫」功能,所以 Add 先做成 disabled 灰色
+// 左欄:Add Planned Course 卡(搜尋框 + 下拉 + Add 按鈕)
+// 打字 → GET /api/courses?name= 搜尋 → 點選一筆 → Add 送出
 // ─────────────────────────────────────────────
-function AddPlannedCourseCard() {
+function AddPlannedCourseCard({ onAdd }: { onAdd: (courseId: number) => void }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<AuditCourse[]>([]);
+  const [selected, setSelected] = useState<AuditCourse | null>(null);
+
+  // 打字就搜尋(簡單版,不做 debounce);清空就收起清單
+  const handleChange = async (value: string) => {
+    setQuery(value);
+    setSelected(null);
+    if (!value.trim()) {
+      setResults([]);
+      return;
+    }
+    try {
+      const courses = await getCourses(value.trim());
+      setResults(courses.slice(0, 8));
+    } catch (err) {
+      console.error(err);
+      setResults([]);
+    }
+  };
+
+  const pick = (course: AuditCourse) => {
+    setSelected(course);
+    setQuery(`${course.course_code} ${course.course_name}`);
+    setResults([]);
+  };
+
+  const handleAdd = () => {
+    if (!selected) return;
+    onAdd(selected.course_id);
+    setQuery('');
+    setSelected(null);
+    setResults([]);
+  };
+
   return (
     <section className="bg-white border border-[#cccccc] rounded-[4px] px-[25px] pt-[25px] pb-[10px] flex flex-col gap-5">
       <h3 className="text-[15px] font-bold text-[#23417d]">Add Planned Course</h3>
-      <input
-        type="text"
-        placeholder="search course name or course id..."
-        className="w-full h-10 border border-[#d9d9d9] rounded-[4px] px-3 text-[14px] placeholder:text-black/55 focus:outline-none focus:border-[#2854c5] transition-colors"
-      />
+      <div className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => handleChange(e.target.value)}
+          placeholder="search course name..."
+          className="w-full h-10 border border-[#d9d9d9] rounded-[4px] px-3 text-[14px] placeholder:text-black/55 focus:outline-none focus:border-[#2854c5] transition-colors"
+        />
+        {results.length > 0 && (
+          <ul className="absolute z-10 left-0 right-0 mt-1 bg-white border border-[#d9d9d9] rounded-[4px] max-h-52 overflow-auto shadow">
+            {results.map((c) => (
+              <li
+                key={c.course_id}
+                onClick={() => pick(c)}
+                className="px-3 py-2 text-[12px] hover:bg-[#f0f4fb] cursor-pointer"
+              >
+                <span className="font-semibold">{c.course_code}</span> {c.course_name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       <button
-        disabled
-        className="w-full h-[33px] bg-[#d9d9d9] text-white text-[12px] font-semibold rounded-[4px] cursor-not-allowed"
+        onClick={handleAdd}
+        disabled={!selected}
+        className={`w-full h-[33px] text-white text-[12px] font-semibold rounded-[4px] ${
+          selected
+            ? 'bg-[#2854c5] hover:brightness-95 cursor-pointer'
+            : 'bg-[#d9d9d9] cursor-not-allowed'
+        }`}
       >
         Add
       </button>
     </section>
   );
+}
+
+// ─────────────────────────────────────────────
+// 把後端 audit 回應 + enrollment 的 is_enrolled
+// 組成畫面要的 StudentProgramDetailData
+//  counted_courses → done / planned_courses → planned / missing_courses → missing
+//  collegeLine、term 後端不提供(QA 已確認)→ 留空
+// ─────────────────────────────────────────────
+function auditToDetail(audit: Audit, isEnrolled: boolean): StudentProgramDetailData {
+  const toRow = (status: CourseStatus) => (c: AuditCourse): StudentCourseRow => ({
+    status,
+    courseId: c.course_id,
+    code: c.course_code,
+    name: c.course_name,
+    credits: String(c.credits),
+    term: '',
+  });
+
+  return {
+    programType: audit.program_type ?? '',
+    programName: audit.program_name,
+    collegeLine: '',
+    isEnrolled,
+    rules: audit.rules.map((rule) => ({
+      name: rule.rule_name,
+      earned: rule.earned_credits,
+      required: rule.required_credits,
+      courses: [
+        ...rule.counted_courses.map(toRow('done')),
+        ...rule.planned_courses.map(toRow('planned')),
+        ...rule.missing_courses.map(toRow('missing')),
+      ],
+    })),
+  };
 }
 
 // ═════════════════════════════════════════════
@@ -190,16 +322,70 @@ export default function StudentProgramDetail() {
   const programId = Number(id);
 
   const navigate = useNavigate();
+  // 登入時存進 localStorage 的資料(跟 Dashboard 用同一組 key)
+  const studentId = Number(localStorage.getItem('student_id')) || 1;
   const userName = localStorage.getItem('user_name') || '王小明';
 
-  // 用 id 去拿這個 program 的資料(目前是假資料,不同 id 回不同內容)
   const [detail, setDetail] = useState<StudentProgramDetailData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // 抽成函式,加/刪計畫課之後可以重抓刷新
+  const loadDetail = useCallback(() => {
+    // audit 沒有 is_enrolled,所以同時打 enrollments,用 program_id 對起來
+    Promise.all([
+      getStudentAudit(studentId, programId),
+      getStudentEnrollments(studentId),
+    ])
+      .then(([audit, enrollments]) => {
+        const match = enrollments.find((e) => e.program_id === programId);
+        const isEnrolled = match?.is_enrolled ?? true;
+        setDetail(auditToDetail(audit, isEnrolled));
+      })
+      .catch((err) => {
+        console.error(err);
+        setError('無法載入這個 program 的資料,請稍後再試');
+      });
+  }, [studentId, programId]);
 
   useEffect(() => {
-    getStudentProgramDetail(programId).then(setDetail);
-  }, [programId]);
+    loadDetail();
+  }, [loadDetail]);
 
-  // 資料還沒回來前先顯示載入中
+  // 把一門 missing 課加進計畫
+  const handleAddPlanned = async (courseId: number) => {
+    try {
+      const res = await addPlannedCourse(studentId, courseId);
+      if (!res.success) {
+        window.alert(res.message || '加入失敗');
+        return;
+      }
+      loadDetail();
+    } catch (err) {
+      console.error(err);
+      window.alert(err instanceof Error ? err.message : '加入計畫課程失敗,請稍後再試');
+    }
+  };
+
+  // 從計畫移除一門 planned 課
+  const handleRemovePlanned = async (courseId: number) => {
+    if (!window.confirm('確定要從計畫移除這門課嗎?')) return;
+    try {
+      const res = await deletePlannedCourse(studentId, courseId);
+      if (!res.success) {
+        window.alert(res.message || '移除失敗');
+        return;
+      }
+      loadDetail();
+    } catch (err) {
+      console.error(err);
+      window.alert('移除計畫課程失敗,請稍後再試');
+    }
+  };
+
+  // 載入失敗 / 載入中
+  if (error) {
+    return <p className="p-5 text-[#be3c32]">{error}</p>;
+  }
   if (!detail) {
     return <p className="p-5">載入中...</p>;
   }
@@ -221,11 +407,19 @@ export default function StudentProgramDetail() {
             {/* 只有 planned(is_enrolled=false)才出現 Delete Plan */}
             {!detail.isEnrolled && (
               <button
-                onClick={() => {
-                  // 後端:DELETE /api/student/{sid}/programs/{pid}(只能刪 planned)
-                  // 目前先做前端確認 + 退回 dashboard,接後端後再換成真的 fetch
-                  if (window.confirm('確定要刪除這個計畫嗎?')) {
+                onClick={async () => {
+                  // 後端:DELETE /api/student/{sid}/programs/{pid}(只能刪 planned,已 enrolled 會被後端拒絕)
+                  if (!window.confirm('確定要刪除這個計畫嗎?')) return;
+                  try {
+                    const res = await deleteStudentProgram(studentId, programId);
+                    if (!res.success) {
+                      window.alert(res.message || '刪除失敗');
+                      return;
+                    }
                     navigate('/dashboard');
+                  } catch (err) {
+                    console.error(err);
+                    window.alert('刪除失敗,請稍後再試');
                   }
                 }}
                 className="bg-[#c0392b] text-white text-[13px] font-medium rounded-[4px] px-3 py-1.5 hover:brightness-95 transition"
@@ -253,7 +447,7 @@ export default function StudentProgramDetail() {
           {/* 左欄(固定寬) */}
           <div className="w-[430px] shrink-0 flex flex-col gap-5">
             <ProgramSummaryCard detail={detail} />
-            <AddPlannedCourseCard />
+            <AddPlannedCourseCard onAdd={handleAddPlanned} />
           </div>
 
           {/* 右欄(伸縮) */}
@@ -262,7 +456,12 @@ export default function StudentProgramDetail() {
             {detail.rules
               .filter((rule) => rule.courses.length > 0)
               .map((rule) => (
-                <RuleCard key={rule.name} rule={rule} />
+                <RuleCard
+                  key={rule.name}
+                  rule={rule}
+                  onAdd={handleAddPlanned}
+                  onRemove={handleRemovePlanned}
+                />
               ))}
           </div>
         </div>
