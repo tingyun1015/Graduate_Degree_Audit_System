@@ -27,11 +27,16 @@ const STATUS_META: Record<
 // ─────────────────────────────────────────────
 // 小元件:單一圓環(實心圈 + 中央分數 + 下方標籤)
 // ─────────────────────────────────────────────
-function Ring({ value, label }: { value: string; label: string }) {
+function Ring({ value, label, muted = false }: { value: string; label: string; muted?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-2.5 w-20 shrink-0">
-      <div className="w-20 h-20 rounded-full border-8 border-[#23417d] flex items-center justify-center">
-        <span className="text-[13px] font-bold text-black">{value}</span>
+      <div
+        className="w-20 h-20 rounded-full border-8 flex items-center justify-center"
+        style={{ borderColor: muted ? '#d9d9d9' : '#23417d' }}
+      >
+        <span className="text-[13px] font-bold" style={{ color: muted ? '#999999' : '#000000' }}>
+          {value}
+        </span>
       </div>
       <span className="text-[10.8px] text-black text-center">{label}</span>
     </div>
@@ -105,21 +110,47 @@ function RuleCard({ rule }: { rule: StudentProgramRule }) {
 // ─────────────────────────────────────────────
 // 左欄:Program 摘要卡。圓環直接從 rules 算出來(每個 rule 一個圈)
 // ─────────────────────────────────────────────
+// 標籤樣式:planned(is_enrolled=false)→灰色 Planned;否則顯示類型
+// Main Major→粉紅★ / Minor 等→淺藍(跟 Dashboard 一致)
+function tagStyleFor(detail: StudentProgramDetailData): {
+  content: string;
+  color: string;
+  textColor: string;
+} {
+  if (!detail.isEnrolled) {
+    return { content: 'Planned', color: '#e4e4e4', textColor: '#555555' };
+  }
+  if (detail.programType === 'Main Major') {
+    return { content: `★ ${detail.programType}`, color: '#ffb6b0', textColor: '#000000' };
+  }
+  // Minor 及其他類型
+  return { content: detail.programType, color: '#e8edf7', textColor: '#2854c5' };
+}
+
 function ProgramSummaryCard({ detail }: { detail: StudentProgramDetailData }) {
+  const tag = tagStyleFor(detail);
   return (
     <section className="bg-white border border-[#cccccc] rounded-[4px] px-[30px] py-[25px] flex flex-col gap-5">
       {/* 標籤 + 標題 + 學院 */}
-      <div className="flex flex-col gap-[5px]">
-        <Tag content={`★ ${detail.programType}`} color="#ffb6b0" />
+      <div className="flex flex-col items-start gap-[5px]">
+        <Tag content={tag.content} color={tag.color} textColor={tag.textColor} />
         <h2 className="text-[18px] font-bold text-[#23417d]">{detail.programName}</h2>
         <p className="text-[12px] text-black">{detail.collegeLine}</p>
       </div>
 
-      {/* 圓環:每個 rule 一個,顯示 earned/required */}
+      {/* 圓環:每個 rule 一個。required 為 0 時顯示灰色「-」 */}
       <div className="flex flex-wrap gap-x-[65px] gap-y-4">
-        {detail.rules.map((rule) => (
-          <Ring key={rule.name} value={`${rule.earned}/${rule.required}`} label={rule.name} />
-        ))}
+        {detail.rules.map((rule) => {
+          const hasReq = rule.required > 0;
+          return (
+            <Ring
+              key={rule.name}
+              value={hasReq ? `${rule.earned}/${rule.required}` : '-'}
+              label={rule.name}
+              muted={!hasReq}
+            />
+          );
+        })}
       </div>
     </section>
   );
@@ -180,13 +211,28 @@ export default function StudentProgramDetail() {
       <main className="flex-1 w-full max-w-[1120px] mx-auto px-6 py-8 flex flex-col gap-6">
         {/* 頂部列:鏡像兩欄對齊 —— 左欄上方 Back,右欄上方 Curriculum Details + Print */}
         <div className="flex gap-6 items-start">
-          <div className="w-[430px] shrink-0">
+          <div className="w-[430px] shrink-0 flex justify-between items-start">
             <button
               onClick={() => navigate('/dashboard')}
               className="bg-[#2854c5] text-white text-[13px] font-medium rounded-[4px] px-3 py-1.5 hover:brightness-95 transition"
             >
               ← Back
             </button>
+            {/* 只有 planned(is_enrolled=false)才出現 Delete Plan */}
+            {!detail.isEnrolled && (
+              <button
+                onClick={() => {
+                  // 後端:DELETE /api/student/{sid}/programs/{pid}(只能刪 planned)
+                  // 目前先做前端確認 + 退回 dashboard,接後端後再換成真的 fetch
+                  if (window.confirm('確定要刪除這個計畫嗎?')) {
+                    navigate('/dashboard');
+                  }
+                }}
+                className="bg-[#c0392b] text-white text-[13px] font-medium rounded-[4px] px-3 py-1.5 hover:brightness-95 transition"
+              >
+                Delete Plan
+              </button>
+            )}
           </div>
           <div className="flex-1 flex justify-between items-start">
             <div>
@@ -212,9 +258,12 @@ export default function StudentProgramDetail() {
 
           {/* 右欄(伸縮) */}
           <div className="flex-1 flex flex-col gap-4">
-            {detail.rules.map((rule) => (
-              <RuleCard key={rule.name} rule={rule} />
-            ))}
+            {/* 只顯示「有課的」rule 卡(例如 Free Elective 沒課就只在左邊顯示「-」圈) */}
+            {detail.rules
+              .filter((rule) => rule.courses.length > 0)
+              .map((rule) => (
+                <RuleCard key={rule.name} rule={rule} />
+              ))}
           </div>
         </div>
       </main>
