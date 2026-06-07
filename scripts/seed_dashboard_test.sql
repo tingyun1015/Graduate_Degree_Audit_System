@@ -158,3 +158,15 @@ INSERT INTO takes (
     (34, 3, 309, '2025-1', NULL, false),
     (36, 3, 315, '2025-2', NULL, false);
     -- missing(完全不選,不建 takes):305,310,311,312,313,316,318
+
+-- ── 修正自動編號序列(sequence)──────────────────────────────────
+-- 上面都用「明確指定 id」INSERT,Postgres 的序列不會跟著前進(加上開頭
+-- TRUNCATE ... RESTART IDENTITY 把序列重設回 1)。若不修正,之後 App 自動
+-- 產生 id(例如加 planned course 寫入 takes)會發出已存在的號 → 撞主鍵 → 500。
+-- 這裡把每個有流水號的表推到目前最大值,下一個號就接在後面。
+SELECT setval(pg_get_serial_sequence('takes','take_id'),             (SELECT MAX(take_id) FROM takes));
+SELECT setval(pg_get_serial_sequence('courses','course_id'),         (SELECT MAX(course_id) FROM courses));
+SELECT setval(pg_get_serial_sequence('programs','program_id'),       (SELECT MAX(program_id) FROM programs));
+SELECT setval(pg_get_serial_sequence('requirement_rules','rule_id'), (SELECT MAX(rule_id) FROM requirement_rules));
+SELECT setval(pg_get_serial_sequence('users','user_id'),             (SELECT MAX(user_id) FROM users));
+SELECT setval(pg_get_serial_sequence('departments','dept_id'),       (SELECT MAX(dept_id) FROM departments));
