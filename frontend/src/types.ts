@@ -106,3 +106,30 @@ export interface CourseListResponse {
     courses: Course[];
   }
 }
+
+
+// Student Program Detail (學生端 program 詳細頁)
+
+export type CourseStatus = 'done' | 'planned' | 'missing';
+
+export interface StudentCourseRow {
+  status: CourseStatus;
+  code: string;
+  name: string;
+  credits: string;
+  term: string;
+}
+
+export interface StudentProgramRule {
+  name: string;
+  earned: number;
+  required: number;
+  courses: StudentCourseRow[];
+}
+
+export interface StudentProgramDetailData {
+  programType: string;   // 例:Main Major / Minor
+  programName: string;   // 例:BS Computer Science
+  collegeLine: string;   // 例:College of Information · Sep. 2023
+  rules: StudentProgramRule[];
+}
