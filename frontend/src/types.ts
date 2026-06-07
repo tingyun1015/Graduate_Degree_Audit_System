@@ -93,23 +93,25 @@ export interface ProgramRule {
   
 
 export interface Course {
-  id: number;
+  course_id: number;
   course_code: string;
   course_name: string;
   credits: number;
   term?: string;
 }
   
-export interface CourseListResponse {
-  total_pages: number;
-  page_num: number;
-  courses: Course[];
-}
+// export interface CourseListResponse {
+//   total_pages: number;
+//   page_num: number;
+//   courses: Course[];
+// }
 
 export interface CourseResponse {
-  success: boolean;
-  message: string;
-  data: Course;
+  course_id: number;
+  course_code: string;
+  course_name: string;
+  credits: number;
+  term?: string;
 }
 
 

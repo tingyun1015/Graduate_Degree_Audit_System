@@ -6,46 +6,49 @@ import Button from "../components/Button";
 import AddCourseModal from "../components/AddCourseModal";
 import EditCourseModal from "../components/EditCourseModal";
 import Modal from "../components/Modal";
+import Toast, { ToastType } from "../components/Toast";
 import { getAdminCourseList, deleteCourse } from "../api";
 import type { Course } from "../types";
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/useAuthStore';
 import { useAdminStore } from '../store/useAdminStore';
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminCourseList() {
-    const { userName, userId: adminId } = useAuthStore();
     const [data, setData] = useState<Course[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
-    const navigate = useNavigate();
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const { activeDepartment } = useAdminStore();
     const [currentPage, setCurrentPage] = useState(1);
-    const [serverTotalPages, setServerTotalPages] = useState(1);
+    const [newlyAddedCourseId, setNewlyAddedCourseId] = useState<number | null>(null);
+
+    const showToast = (message: string, type: ToastType) => {
+        setToast({ message, type });
+    };
 
     const handleDeleteCourse = async () => {
         if (!selectedCourse) return;
         setIsDeleting(true);
         try {
-            await deleteCourse(selectedCourse.id);
+            await deleteCourse(selectedCourse.course_id);
             setIsDeleteModalOpen(false);
             fetchCourses();
+            showToast("Course deleted successfully.", "success");
         } catch (error) {
             console.error("Failed to delete course:", error);
-            alert("Failed to delete course.");
+            showToast("Failed to delete course.", "error");
         } finally {
             setIsDeleting(false);
         }
     };
 
-    const fetchCourses = (page: number = currentPage) => {
-        if (!activeDepartment?.id) return;
-        getAdminCourseList(Number(activeDepartment.id), page).then((result) => {
-            setData(result.courses || []);
-            setServerTotalPages(result.total_pages || 1);
-            setCurrentPage(result.page_num || 1);
+    const fetchCourses = () => {
+        getAdminCourseList(1).then((result) => {
+            result.reverse();
+            setData(result || []);
         }).catch((err) => {
             console.error("Failed to fetch courses:", err);
             setData([]);
@@ -56,20 +59,24 @@ export default function AdminCourseList() {
     useEffect(() => {
         if (activeDepartment?.id) {
             setCurrentPage(1);
-            fetchCourses(1);
+            fetchCourses();
         }
     }, [activeDepartment?.id]);
 
-    // Fetch courses when currentPage changes
+    // Make sure we fetch when component mounts
     useEffect(() => {
-        fetchCourses(currentPage);
-    }, [currentPage]);
+        fetchCourses();
+    }, []);
 
-    const paginatedData = data || [];
+    const totalPages = Math.max(1, Math.ceil((data || []).length / ITEMS_PER_PAGE));
+    const paginatedData = (data || []).slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     return (
         <div className="min-h-screen flex flex-col bg-[#fff8ef]">
-            <Header userName={userName || ""} />
+            <Header />
             
             <div className="flex-1 flex w-full mx-auto">
                 <AdminSidebar activeTab="course" />
@@ -91,7 +98,7 @@ export default function AdminCourseList() {
                         />
                     </div>
 
-                    <div className="w-full bg-white border border-[#ccc] rounded-[4px] p-[30px] flex flex-col min-h-[400px]">
+                    <div className="w-full bg-white border border-[#ccc] rounded-[4px] p-[30px] flex flex-col">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-[#ccc] text-[#23417d] text-[14px]">
@@ -104,7 +111,10 @@ export default function AdminCourseList() {
                             </thead>
                             <tbody>
                                 {paginatedData.map((course) => (
-                                    <tr key={course.id} className="border-b border-dashed border-[#ccc] text-[14px] text-black">
+                                    <tr 
+                                        key={course.course_id} 
+                                        className={`border-b border-dashed border-[#ccc] text-[14px] text-black transition-colors duration-200 ${course.course_id === newlyAddedCourseId ? 'bg-[#fff8ef]' : 'bg-transparent'}`}
+                                    >
                                         <td className="py-4">{course.course_code}</td>
                                         <td className="py-4">{course.course_name}</td>
                                         <td className="py-4">{course.credits}</td>
@@ -131,7 +141,7 @@ export default function AdminCourseList() {
                                         </td>
                                     </tr>
                                 ))}
-                                {(!data || data.length === 0) && (
+                                {(!paginatedData || paginatedData.length === 0) && (
                                     <tr>
                                         <td colSpan={5} className="py-8 text-center text-gray-500">No courses found.</td>
                                     </tr>
@@ -139,7 +149,7 @@ export default function AdminCourseList() {
                             </tbody>
                         </table>
                         
-                        {serverTotalPages > 1 && (
+                        {totalPages > 1 && (
                             <div className="flex justify-center mt-[20px] gap-2 text-[#2854c5] text-[14px]">
                                 <span 
                                     className={`cursor-pointer hover:underline mr-1 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed hover:no-underline' : ''}`}
@@ -147,7 +157,7 @@ export default function AdminCourseList() {
                                 >
                                     ‹
                                 </span>
-                                {Array.from({ length: serverTotalPages }, (_, i) => i + 1).map(page => (
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                                     <span 
                                         key={page}
                                         className={`cursor-pointer hover:underline ${currentPage === page ? 'font-bold underline' : ''}`}
@@ -157,8 +167,8 @@ export default function AdminCourseList() {
                                     </span>
                                 ))}
                                 <span 
-                                    className={`cursor-pointer hover:underline ml-1 ${currentPage === serverTotalPages ? 'opacity-50 cursor-not-allowed hover:no-underline' : ''}`}
-                                    onClick={() => setCurrentPage(p => Math.min(serverTotalPages, p + 1))}
+                                    className={`cursor-pointer hover:underline ml-1 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed hover:no-underline' : ''}`}
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 >
                                     ›
                                 </span>
@@ -173,8 +183,18 @@ export default function AdminCourseList() {
             <AddCourseModal 
                 isOpen={isAddModalOpen} 
                 onClose={() => setIsAddModalOpen(false)} 
-                departmentId={Number(activeDepartment?.id)}
-                onSuccess={() => fetchCourses(currentPage)}
+                onSuccess={(courseId) => {
+                    showToast("Course added successfully.", "success");
+                    if (courseId) {
+                        setNewlyAddedCourseId(courseId);
+                        setTimeout(() => setNewlyAddedCourseId(null), 2000);
+                        setCurrentPage(1);
+                    }
+                    fetchCourses();
+                }}
+                onError={(msg) => {
+                    showToast(msg, "error");
+                }}
             />
 
             <EditCourseModal 
@@ -184,7 +204,10 @@ export default function AdminCourseList() {
                     setSelectedCourse(null);
                 }} 
                 course={selectedCourse}
-                onSuccess={() => fetchCourses(currentPage)}
+                onSuccess={() => {
+                    showToast("Course updated successfully.", "success");
+                    fetchCourses();
+                }}
             />
 
             <Modal 
@@ -194,7 +217,7 @@ export default function AdminCourseList() {
             >
                 <div className="flex flex-col gap-6">
                     <p className="text-[14px] text-gray-700">
-                        Are you sure you want to delete the course <strong>{selectedCourse?.code}</strong>?
+                        Are you sure you want to delete the course <strong>{selectedCourse?.course_code} - {selectedCourse?.course_name}</strong>?
                     </p>
                     <div className="flex justify-end gap-3">
                         <Button 
@@ -214,6 +237,14 @@ export default function AdminCourseList() {
                     </div>
                 </div>
             </Modal>
+
+            {toast && (
+                <Toast 
+                    message={toast.message} 
+                    type={toast.type} 
+                    onClose={() => setToast(null)} 
+                />
+            )}
         </div>
     );
 }

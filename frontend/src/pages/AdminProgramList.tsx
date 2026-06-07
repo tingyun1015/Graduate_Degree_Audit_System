@@ -46,7 +46,7 @@ export default function AdminProgramList() {
 
     return (
         <div className="min-h-screen flex flex-col bg-[#fff8ef]">
-            <Header userName={userName} />
+            <Header />
             
             {/* 畫面主體 (側邊欄 + 右側內容) */}
             <div className="flex-1 flex w-full mx-auto">

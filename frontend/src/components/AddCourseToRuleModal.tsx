@@ -23,10 +23,10 @@ export default function AddCourseToRuleModal({ isOpen, onClose, ruleId, onSucces
 
   useEffect(() => {
     if (isOpen && activeDepartment?.id) {
-      getAdminCourseList(Number(activeDepartment.id), 1).then((res) => {
-        setCourses(res.courses || []);
-        if (res.courses && res.courses.length > 0) {
-          setSelectedCourseId(res.courses[0].id);
+      getAdminCourseList(1).then((res) => {
+        setCourses(res || []);
+        if (res && res.length > 0) {
+          setSelectedCourseId(res[0].id);
         }
       });
     }
