@@ -180,6 +180,8 @@ class Course(Base):
     course_code: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     course_name: Mapped[str] = mapped_column(String(200), nullable=False)
     credits: Mapped[int] = mapped_column(Integer, nullable=False)
+    # e.g. "Fall, 2025" / "Spring, 2026" – term the course is offered in
+    term: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     # ── relationships ──────────────────────────────────────
     takes: Mapped[list["Takes"]] = relationship(
