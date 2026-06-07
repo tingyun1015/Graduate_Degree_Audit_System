@@ -1,4 +1,4 @@
-import type { Dashboard, LoginResponse, AdminLoginResponse, CourseResponse, AdminProgramListResponse, ProgramDetailResponse, Program, Course, Audit, AuditCourse, StudentActionResponse, StudentEnrollment } from './types';
+import type { Dashboard, LoginResponse, CourseListResponse, AdminLoginResponse, CourseResponse, AdminProgramListResponse, ProgramDetailResponse, Course, Audit, AuditCourse, StudentActionResponse, StudentEnrollment, ProgramOption } from './types';
 const BASE_URL = 'http://localhost:8000';
 
 
@@ -207,13 +207,8 @@ export async function getCourses(name = ''): Promise<AuditCourse[]> {
   });
 }
 
-export async function getAllPrograms(): Promise<{
-  success: boolean,
-  message: string,
-  data: {
-    programs: Program[]
-  }
-}> {
+// 取得所有 program(GET /api/programs 回扁平陣列,含 is_published;published 與否由前端篩)
+export async function getAllPrograms(): Promise<ProgramOption[]> {
   return await fetch(`${BASE_URL}/api/programs`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },

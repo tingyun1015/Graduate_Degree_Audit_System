@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDashboard } from '../api';
-import type { Dashboard, Program } from '../types';
+import { getDashboard, getAllPrograms, addStudentProgram } from '../api';
+import type { Dashboard, Program, ProgramOption } from '../types';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Tag from '../components/Tag';
+import Button from '../components/Button';
 
 // ─────────────────────────────────────────────
 // 小工具:算出單一 program 的 earned / required 總和
@@ -67,12 +68,86 @@ function ProgressRing({ earned, required }: { earned: number; required: number }
 function DetailButton({ programId }: { programId: number }) {
   const navigate = useNavigate();
   return (
-    <button
+    <Button 
+      content="Detail"
+      color="#2854c5"
+      hasArrow={true}
+      isFullWidth={false}
       onClick={() => navigate(`/program/${programId}`)}
-      className="bg-[#2854c5] text-white text-sm font-medium px-4 py-1.5 rounded hover:bg-[#1f43a0] transition-colors"
+    />
+  );
+}
+
+// ─────────────────────────────────────────────
+// 小元件:新增學程的彈出視窗(+ New Program)
+// 選一個尚未加入的已發布 program → Create → 建立 planned enrollment
+// ─────────────────────────────────────────────
+function NewProgramModal({
+  options,
+  onClose,
+  onCreate,
+}: {
+  options: ProgramOption[];
+  onClose: () => void;
+  onCreate: (programId: number) => void;
+}) {
+  const [selectedId, setSelectedId] = useState<number | ''>('');
+
+  return (
+    // 半透明遮罩;點遮罩關閉,點視窗本身不關(stopPropagation)
+    <div
+      className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center px-4"
+      onClick={onClose}
     >
-      Detail →
-    </button>
+      <div
+        className="bg-white rounded-lg shadow-xl w-full max-w-[640px] p-7"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 標題列 */}
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-bold text-[#1f3a5f]">+ New Program</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700 text-xl leading-none cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* 下拉:可加入的 program */}
+        <label className="block text-sm text-gray-600 mb-1.5">Select Program</label>
+        <select
+          value={selectedId}
+          onChange={(e) => setSelectedId(e.target.value ? Number(e.target.value) : '')}
+          className="w-full h-11 border border-[#d9d4cc] rounded px-3 text-sm bg-white focus:outline-none focus:border-[#2854c5] transition-colors"
+        >
+          <option value="">
+            {options.length ? '— Select —' : 'No available programs to join'}
+          </option>
+          {options.map((p) => (
+            <option key={p.program_id} value={p.program_id}>
+              {p.program_name}
+              {p.program_type ? ` (${p.program_type})` : ''}
+            </option>
+          ))}
+        </select>
+
+        {/* Create */}
+        <div className="flex justify-end mt-8">
+          <button
+            onClick={() => selectedId !== '' && onCreate(selectedId)}
+            disabled={selectedId === ''}
+            className={`text-white text-sm font-semibold rounded px-6 py-2 ${
+              selectedId !== ''
+                ? 'bg-[#2854c5] hover:bg-[#1f43a0] cursor-pointer'
+                : 'bg-[#d9d9d9] cursor-not-allowed'
+            }`}
+          >
+            Create
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -81,23 +156,57 @@ function DetailButton({ programId }: { programId: number }) {
 // ═════════════════════════════════════════════
 export default function Dashboard() {
   const [data, setData] = useState<Dashboard | null>(null);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [programOptions, setProgramOptions] = useState<ProgramOption[]>([]);
 
   // 從登入時存進 localStorage 的資料讀取;
   // 若沒有(例如直接打開 /dashboard 沒先登入),就退回測試用的 1 號 / 王小明
   const studentId = Number(localStorage.getItem('student_id')) || 1;
   const userName = localStorage.getItem('user_name') || '王小明';
 
-  useEffect(() => {
-    getDashboard(studentId).then((result) => {
-      setData(result);
-    });
+  // 抽成函式,加入新 program 後可重抓刷新
+  const loadDashboard = useCallback(() => {
+    getDashboard(studentId).then(setData);
   }, [studentId]);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
 
   if (!data) {
     return <p className="p-5">載入中...</p>;
   }
 
   const { student_info, programs } = data;
+
+  // 開啟視窗:抓所有 program,只留「已發布且尚未加入」的當選項
+  const openAddProgram = async () => {
+    try {
+      const all = await getAllPrograms();
+      const enrolledIds = new Set(programs.map((p) => p.program_id));
+      setProgramOptions(all.filter((p) => p.is_published && !enrolledIds.has(p.program_id)));
+      setModalOpen(true);
+    } catch (err) {
+      console.error(err);
+      window.alert('無法取得可加入的 program');
+    }
+  };
+
+  // 送出:建立 planned enrollment(is_enrolled=false)→ 關窗 + 刷新
+  const handleCreate = async (programId: number) => {
+    try {
+      const res = await addStudentProgram(studentId, programId);
+      if (!res.success) {
+        window.alert(res.message || '加入失敗');
+        return;
+      }
+      setModalOpen(false);
+      loadDashboard();
+    } catch (err) {
+      console.error(err);
+      window.alert('加入 program 失敗,請稍後再試');
+    }
+  };
 
   // ── 衍生計算 ──
   // 已修總學分 = 所有 program 所有 sub_rule 的 earned 加總
@@ -258,8 +367,11 @@ export default function Dashboard() {
               );
             })}
 
-            {/* 新增學程的佔位卡(虛線框;後端 API 還沒有,先不接功能) */}
-            <button className="border-2 border-dashed border-[#d9d4cc] rounded-lg px-6 py-5 flex items-center justify-center text-gray-500 hover:border-[#2854c5] hover:text-[#2854c5] transition-colors">
+            {/* 新增學程:點擊開啟 + New Program 視窗 */}
+            <button
+              onClick={openAddProgram}
+              className="border-2 border-dashed border-[#d9d4cc] rounded-lg px-6 py-5 flex items-center justify-center text-gray-500 hover:border-[#2854c5] hover:text-[#2854c5] transition-colors cursor-pointer"
+            >
               + Add Program
             </button>
           </div>
@@ -267,6 +379,15 @@ export default function Dashboard() {
 
       </main>
       <Footer />
+
+      {/* + New Program 視窗 */}
+      {isModalOpen && (
+        <NewProgramModal
+          options={programOptions}
+          onClose={() => setModalOpen(false)}
+          onCreate={handleCreate}
+        />
+      )}
     </div>
   );
 }

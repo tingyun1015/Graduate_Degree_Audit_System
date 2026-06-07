@@ -50,6 +50,14 @@ def get_active_programs(student: Student) -> list[Program]:
         if enrollment.is_enrolled and enrollment.program
     ]
 
+def get_planned_programs(student: Student) -> list[Program]:
+    return [
+        enrollment.program
+        for enrollment in student.enrollments
+        if not enrollment.is_enrolled and enrollment.program
+    ]
+
+
 
 def get_primary_program(student: Student, active_programs: list[Program]) -> Program | None:
     return choose_primary_program(student, active_programs)
