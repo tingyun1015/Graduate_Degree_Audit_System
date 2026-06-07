@@ -362,23 +362,23 @@ export default function StudentProgramDetail() {
       loadDetail();
     } catch (err) {
       console.error(err);
-      window.alert(err instanceof Error ? err.message : '加入計畫課程失敗,請稍後再試');
+      window.alert(err instanceof Error ? err.message : 'Failed to add planned course, please try again later');
     }
   };
 
   // 從計畫移除一門 planned 課
   const handleRemovePlanned = async (courseId: number) => {
-    if (!window.confirm('確定要從計畫移除這門課嗎?')) return;
+    if (!window.confirm('Remove the planned course?')) return;
     try {
       const res = await deletePlannedCourse(studentId, courseId);
       if (!res.success) {
-        window.alert(res.message || '移除失敗');
+        window.alert(res.message || 'remove failed');
         return;
       }
       loadDetail();
     } catch (err) {
       console.error(err);
-      window.alert('移除計畫課程失敗,請稍後再試');
+      window.alert('Failed to remove planned course, please try again later');
     }
   };
 
@@ -387,7 +387,7 @@ export default function StudentProgramDetail() {
     return <p className="p-5 text-[#be3c32]">{error}</p>;
   }
   if (!detail) {
-    return <p className="p-5">載入中...</p>;
+    return <p className="p-5">Loading...</p>;
   }
 
   return (
@@ -409,17 +409,17 @@ export default function StudentProgramDetail() {
               <button
                 onClick={async () => {
                   // 後端:DELETE /api/student/{sid}/programs/{pid}(只能刪 planned,已 enrolled 會被後端拒絕)
-                  if (!window.confirm('確定要刪除這個計畫嗎?')) return;
+                  if (!window.confirm('Are you sure you want to delete this plan?')) return;
                   try {
                     const res = await deleteStudentProgram(studentId, programId);
                     if (!res.success) {
-                      window.alert(res.message || '刪除失敗');
+                      window.alert(res.message || 'Failed to delete plan, please try again later');
                       return;
                     }
                     navigate('/dashboard');
                   } catch (err) {
                     console.error(err);
-                    window.alert('刪除失敗,請稍後再試');
+                    window.alert('Failed to delete plan, please try again later');
                   }
                 }}
                 className="bg-[#c0392b] text-white text-[13px] font-medium rounded-[4px] px-3 py-1.5 hover:brightness-95 transition"
