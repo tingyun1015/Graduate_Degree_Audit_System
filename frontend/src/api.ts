@@ -25,6 +25,7 @@ const MOCK_PROGRAM_DETAILS: Record<number, StudentProgramDetailData> = {
     programType: 'University Requirements',
     programName: 'General Education',
     collegeLine: 'University Wide · Sep. 2023',
+    isEnrolled: true,
     rules: [
       {
         name: 'Humanities',
@@ -51,6 +52,7 @@ const MOCK_PROGRAM_DETAILS: Record<number, StudentProgramDetailData> = {
     programType: 'Main Major',
     programName: 'BS Computer Science',
     collegeLine: 'College of Information · Sep. 2023',
+    isEnrolled: true,
     rules: [
       {
         name: 'Required core',
@@ -91,6 +93,7 @@ const MOCK_PROGRAM_DETAILS: Record<number, StudentProgramDetailData> = {
     programType: 'Minor',
     programName: 'Advertising',
     collegeLine: 'College of Communication · Sep. 2023',
+    isEnrolled: true,
     rules: [
       {
         name: 'Minor Required',
@@ -102,6 +105,43 @@ const MOCK_PROGRAM_DETAILS: Record<number, StudentProgramDetailData> = {
           { status: 'planned', code: 'ADV201', name: 'Copywriting', credits: '4 cr', term: '—' },
           { status: 'missing', code: 'ADV202', name: 'Media Planning', credits: '4 cr', term: '—' },
         ],
+      },
+    ],
+  },
+  // 104:planned(學生自己加的計畫,is_enrolled=false)
+  104: {
+    programType: 'Credit Program',
+    programName: 'Design Certificate',
+    collegeLine: 'College of Design',
+    isEnrolled: false,
+    rules: [
+      {
+        name: 'Required core',
+        earned: 32,
+        required: 35,
+        courses: [
+          { status: 'done', code: 'DC1101', name: 'Design Fundamentals', credits: '3 cr', term: 'Y1·Fall' },
+          { status: 'done', code: 'DC1202', name: 'Visual Communication', credits: '3 cr', term: 'Y1·Spring' },
+          { status: 'done', code: 'DC2103', name: 'Typography', credits: '3 cr', term: 'Y2·Fall' },
+          { status: 'planned', code: 'DC2204', name: 'Interaction Design', credits: '3 cr', term: '—' },
+          { status: 'missing', code: 'DC3105', name: 'Design Studio', credits: '3 cr', term: '—' },
+        ],
+      },
+      {
+        name: 'Elective',
+        earned: 9,
+        required: 75,
+        courses: [
+          { status: 'done', code: 'DC5101', name: 'Motion Graphics', credits: '3 cr', term: 'Y2·Spring' },
+          { status: 'planned', code: 'DC5202', name: 'Service Design', credits: '3 cr', term: '—' },
+          { status: 'missing', code: 'DC5303', name: 'Design Research', credits: '3 cr', term: '—' },
+        ],
+      },
+      {
+        name: 'Free Elective',
+        earned: 0,
+        required: 0,
+        courses: [],
       },
     ],
   },

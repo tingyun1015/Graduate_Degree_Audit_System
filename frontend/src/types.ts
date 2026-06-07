@@ -128,8 +128,10 @@ export interface StudentProgramRule {
 }
 
 export interface StudentProgramDetailData {
-  programType: string;   // 例:Main Major / Minor
+  programType: string;   // 例:Main Major / Minor(admin 設定的類型)
   programName: string;   // 例:BS Computer Science
   collegeLine: string;   // 例:College of Information · Sep. 2023
+  isEnrolled: boolean;   // 對應後端 enrollment 的 is_enrolled
+                         // false = 學生自己加的計畫(planned),會顯示 Planned 標籤 + Delete Plan
   rules: StudentProgramRule[];
 }
