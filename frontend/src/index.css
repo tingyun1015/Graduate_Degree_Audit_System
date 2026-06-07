@@ -2,4 +2,16 @@
 
 @theme {
   --font-sans: 'Inter', system-ui, sans-serif;
+  --animate-fade-in: fade-in 0.3s ease-out forwards;
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+      transform: translateX(0);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(-20px);
+    }
+  }
 }

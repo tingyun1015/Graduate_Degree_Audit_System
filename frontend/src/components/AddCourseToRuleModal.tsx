@@ -11,9 +11,10 @@ interface AddCourseToRuleModalProps {
   onClose: () => void;
   ruleId: number | null;
   onSuccess?: () => void;
+  onError?: (msg: string) => void;
 }
 
-export default function AddCourseToRuleModal({ isOpen, onClose, ruleId, onSuccess }: AddCourseToRuleModalProps) {
+export default function AddCourseToRuleModal({ isOpen, onClose, ruleId, onSuccess, onError }: AddCourseToRuleModalProps) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<number | ''>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,11 +24,9 @@ export default function AddCourseToRuleModal({ isOpen, onClose, ruleId, onSucces
 
   useEffect(() => {
     if (isOpen && activeDepartment?.id) {
-      getAdminCourseList(Number(activeDepartment.id), 1).then((res) => {
-        setCourses(res.courses || []);
-        if (res.courses && res.courses.length > 0) {
-          setSelectedCourseId(res.courses[0].id);
-        }
+      getAdminCourseList(1).then((res) => {
+        setCourses(res || []);
+        setSelectedCourseId('');
       });
     }
   }, [isOpen, activeDepartment?.id, userId]);
@@ -37,12 +36,16 @@ export default function AddCourseToRuleModal({ isOpen, onClose, ruleId, onSucces
     if (!ruleId || !selectedCourseId) return;
     setIsLoading(true);
     try {
-      await addCourseIntoProgramRule(ruleId, Number(selectedCourseId));
+      await addCourseIntoProgramRule(Number(userId), Number(ruleId), Number(selectedCourseId));
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error("Failed to add course to rule:", error);
-      alert("Failed to add course. Please try again.");
+      console.error("Failed to add course:", error);
+      if (onError) {
+        onError("Failed to add course. Please try again.");
+      } else {
+        alert("Failed to add course. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +64,7 @@ export default function AddCourseToRuleModal({ isOpen, onClose, ruleId, onSucces
           >
             <option value="" disabled>-- Select a course --</option>
             {courses.map(course => (
-              <option key={course.id} value={course.id}>
+              <option key={course.course_id} value={course.course_id}>
                 {course.course_code} - {course.course_name} ({course.credits} cr)
               </option>
             ))}

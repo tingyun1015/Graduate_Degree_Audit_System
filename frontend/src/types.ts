@@ -64,6 +64,8 @@ export interface ProgramInfo {
   type: string;
   title: string;
   college: string;
+  is_published: boolean;
+  sub_rules: SubRule[];
 }
 
 export interface AdminProgramListResponse {
@@ -88,28 +90,30 @@ export interface ProgramRule {
   type: 'core' | 'elective' | 'free_elective';
   name: string;
   courses?: Course[];
-  requiredCredits?: number;
+  requiredCredits: number | null;
 }
   
 
 export interface Course {
-  id: number;
+  course_id: number;
   course_code: string;
   course_name: string;
   credits: number;
   term?: string;
 }
   
-export interface CourseListResponse {
-  total_pages: number;
-  page_num: number;
-  courses: Course[];
-}
+// export interface CourseListResponse {
+//   total_pages: number;
+//   page_num: number;
+//   courses: Course[];
+// }
 
 export interface CourseResponse {
-  success: boolean;
-  message: string;
-  data: Course;
+  course_id: number;
+  course_code: string;
+  course_name: string;
+  credits: number;
+  term?: string;
 }
 
 
@@ -119,7 +123,6 @@ export type CourseStatus = 'done' | 'planned' | 'missing';
 
 export interface StudentCourseRow {
   status: CourseStatus;
-  courseId: number;   // 加/刪計畫課時要用,對應 audit 的 course_id
   code: string;
   name: string;
   credits: string;

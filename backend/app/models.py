@@ -244,6 +244,9 @@ class Enrollment(Base):
     is_enrolled: Mapped[bool] = mapped_column(
         Boolean, default=True, nullable=False
     )
+    is_main: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
 
     # ── relationships ──────────────────────────────────────
     student: Mapped["Student"] = relationship(

@@ -225,8 +225,8 @@ export default function Dashboard() {
   const programCount = mainMajorPrograms.length + otherPrograms.length;
 
   return (
-    <div className="min-h-screen bg-[#fff8ef] flex flex-col">
-      <Header userName={userName} />
+    <div className="min-h-screen flex flex-col bg-[#fff8ef]">
+      <Header />
 
       {/* 主內容區(置中、限制最大寬度) */}
       <main className="flex-1 w-full max-w-[1120px] mx-auto px-6 py-8 flex flex-col gap-6">

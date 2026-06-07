@@ -76,6 +76,7 @@ def _program_summary(program: Program) -> AdminProgramSummary:
         id=program.program_id,
         type=program.program_type,
         title=program.program_name,
+        is_published=program.is_published,
     )
 
 

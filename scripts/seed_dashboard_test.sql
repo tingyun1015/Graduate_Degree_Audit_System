@@ -27,16 +27,16 @@ INSERT INTO programs (
     dept_id
 ) VALUES
     (101, 'General Education', 30, 2023, 'University Requirements', true, 3),
-    (102, 'BS Computer Science', 128, 2023, 'Main Major', true, 1),
+    (102, 'BS Computer Science', 128, 2023, 'Major', true, 1),
     (103, 'Advertising', 35, 2023, 'Minor', true, 2);
 
-INSERT INTO enrollments (student_id, program_id, is_enrolled) VALUES
-    (1, 101, true),
-    (1, 102, true),
-    (1, 103, true),
+INSERT INTO enrollments (student_id, program_id, is_enrolled, is_main) VALUES
+    (1, 101, true, false),
+    (1, 102, true, true),
+    (1, 103, true, false),
     -- 李小八:只選 101 + 102,故意不選 103(Advertising)→ 留著測 + Add Program
-    (3, 101, true),
-    (3, 102, true);
+    (3, 101, true, false),
+    (3, 102, true, true);
 
 INSERT INTO requirement_rules (
     rule_id,
@@ -45,13 +45,15 @@ INSERT INTO requirement_rules (
     required_credits,
     program_id
 ) VALUES
-    (201, 'Humanities', 'required', 6, 101),
-    (202, 'Sciences', 'required', 9, 101),
-    (203, 'Social Sciences', 'required', 9, 101),
-    (204, 'Required core', 'required', 35, 102),
+    (201, 'Humanities', 'core', 6, 101),
+    (202, 'Sciences', 'core', 9, 101),
+    (203, 'Social Sciences', 'core', 9, 101),
+    (204, 'Required core', 'core', 35, 102),
     (205, 'Elective', 'elective', 75, 102),
-    (206, 'Free Elective', 'elective', 18, 102),
-    (207, 'Minor Required', 'required', 35, 103);
+    (206, 'Free Elective', 'free_elective', 18, 102),
+    (207, 'Required core', 'core', 35, 103),
+    (208, 'Elective', 'elective', 35, 103),
+    (209, 'Free Elective', 'free_elective', 18, 103);
 
 INSERT INTO courses (course_id, course_code, course_name, credits) VALUES
     (301, 'HUM101', 'World Literature', 3),

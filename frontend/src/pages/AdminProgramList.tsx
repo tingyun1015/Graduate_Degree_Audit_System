@@ -11,28 +11,23 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { useAdminStore } from '../store/useAdminStore';
 
-
-// 小工具：取得對應標籤的背景色
-function getTagColor(type: string) {
-    switch (type) {
-        case 'Major': return '#ffb6b0';
-        case 'Minor': return '#c2d3ff';
-        case 'Program': return '#97ffb3';
-        case 'Planned': return '#d0cac2';
-        default: return '#cccccc';
-    }
-}
-
 export default function AdminProgramList() {
-    const { userName } = useAuthStore();
-    const { activeDepartment } = useAdminStore();
+    const { userId, departmentList: departments } = useAuthStore();
+    const { activeDepartment, setActiveDepartment } = useAdminStore();
     const [data, setData] = useState<ProgramInfo[] | []>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!activeDepartment && departments?.length > 0) {
+            setActiveDepartment(departments[0]);
+        }
+    }, [departments, activeDepartment, setActiveDepartment]);
 
     const fetchPrograms = () => {
         if (!activeDepartment?.id) return;
-        getAdminProgramList(Number(activeDepartment.id)).then((result) => {
+        getAdminProgramList(Number(userId), Number(activeDepartment.id)).then((result) => {
             setData(result.data.programs || []);
         }).catch(err => {
             console.error("Failed to fetch programs:", err);
@@ -46,19 +41,61 @@ export default function AdminProgramList() {
 
     return (
         <div className="min-h-screen flex flex-col bg-[#fff8ef]">
-            <Header userName={userName} />
-            
-            {/* 畫面主體 (側邊欄 + 右側內容) */}
+            <Header />
             <div className="flex-1 flex w-full mx-auto">
                 <AdminSidebar activeTab="program" />
                 
                 <main className="flex-1 flex flex-col items-center pt-[50px] pb-10 px-[60px]">
-                    <div className="w-full flex items-center justify-between mb-8  h-[36px]">
-                       <div className="flex items-center gap-3">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#23417d">
-                                <path d="M12 3L1 9L5 11.18V17.18L12 21L19 17.18V11.18L21 10.09V17H23V9L12 3ZM18.82 9L12 12.72L5.18 9L12 5.28L18.82 9ZM17 15.99L12 18.72L7 15.99V12.27L12 15L17 12.27V15.99Z"/>
-                            </svg>
-                            <h1 className="text-[19px] font-semibold text-[#23417d]">Programs</h1>
+                    <div className="w-full flex items-center justify-between mb-8">
+                       <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-3">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#23417d">
+                                    <path d="M12 3L1 9L5 11.18V17.18L12 21L19 17.18V11.18L21 10.09V17H23V9L12 3ZM18.82 9L12 12.72L5.18 9L12 5.28L18.82 9ZM17 15.99L12 18.72L7 15.99V12.27L12 15L17 12.27V15.99Z"/>
+                                </svg>
+                                <h1 className="text-[19px] font-semibold text-[#23417d]">Programs</h1>
+                            </div>
+                            
+                            <div className="relative">
+                                {activeDepartment ? (
+                                    <div 
+                                        className="flex items-center gap-3 cursor-pointer group bg-white border border-[#ccc] px-4 py-1.5 rounded-[4px] hover:border-[#23417d] transition-colors"
+                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                    >
+                                        <div className="flex flex-col w-[280px] py-2">
+                                            <span className="text-[14px] text-[#23417d] font-semibold leading-tight truncate">
+                                                {activeDepartment.name}
+                                            </span>
+                                        </div>
+                                        <span className={`text-[10px] text-black group-hover:text-[#23417d] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}>
+                                            ▼
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col cursor-wait opacity-50 px-4 py-1.5 border border-transparent">
+                                        <span className="text-[14px] text-black">Loading...</span>
+                                    </div>
+                                )}
+
+                                {/* Dropdown Menu */}
+                                {isDropdownOpen && departments?.length > 0 && (
+                                    <div className="absolute top-full left-0 w-[280px] bg-white border border-[#ccc] rounded-[4px] shadow-lg mt-1 z-10 overflow-hidden">
+                                        {departments.map(dept => (
+                                            <div 
+                                                key={dept.id}
+                                                className={`px-4 py-4 cursor-pointer transition-colors hover:bg-[#fff8ef] ${
+                                                    activeDepartment?.id === dept.id ? 'bg-[#fcf9f5] border-l-2 border-[#23417d]' : 'border-l-2 border-transparent'
+                                                }`}
+                                                onClick={() => {
+                                                    setActiveDepartment(dept);
+                                                    setIsDropdownOpen(false);
+                                                }}
+                                            >
+                                                <div className="text-[13px] text-[#23417d] font-semibold line-clamp-2">{dept.name}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>  
                     </div>
 
@@ -66,10 +103,9 @@ export default function AdminProgramList() {
                     <div className="grid lg:grid-cols-2 gap-x-[40px] gap-y-[20px] w-full md:grid-cols-1">
                         {data.map((prog) => (
                             <div key={prog.id} className="bg-white border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center gap-[10px] w-full min-h-[126px]">
-                                <div className="flex flex-col items-start gap-[5px] flex-1">
+                                <div className="flex flex-col items-start gap-[5px] flex-1 justify-center">
                                     <Tag 
                                         content={prog.type} 
-                                        color={getTagColor(prog.type)} 
                                         textColor="black"
                                     />
                                     <h4 className="text-[#23417d] text-[14.4px] font-bold mt-1 leading-tight">{prog.title}</h4>
