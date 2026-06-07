@@ -6,10 +6,10 @@ import Button from "../components/Button";
 import AddCourseModal from "../components/AddCourseModal";
 import EditCourseModal from "../components/EditCourseModal";
 import Modal from "../components/Modal";
-import Toast, { ToastType } from "../components/Toast";
 import { getAdminCourseList, deleteCourse } from "../api";
 import type { Course } from "../types";
 import { useAdminStore } from '../store/useAdminStore';
+import { useToastStore } from '../store/useToastStore';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -20,14 +20,10 @@ export default function AdminCourseList() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+    const showToast = useToastStore((state) => state.showToast);
     const { activeDepartment } = useAdminStore();
     const [currentPage, setCurrentPage] = useState(1);
     const [newlyAddedCourseId, setNewlyAddedCourseId] = useState<number | null>(null);
-
-    const showToast = (message: string, type: ToastType) => {
-        setToast({ message, type });
-    };
 
     const handleDeleteCourse = async () => {
         if (!selectedCourse) return;
@@ -237,14 +233,6 @@ export default function AdminCourseList() {
                     </div>
                 </div>
             </Modal>
-
-            {toast && (
-                <Toast 
-                    message={toast.message} 
-                    type={toast.type} 
-                    onClose={() => setToast(null)} 
-                />
-            )}
         </div>
     );
 }

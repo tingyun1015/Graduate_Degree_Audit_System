@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Modal from './Modal';
 import Button from './Button';
 import { editAdminProgramRule } from '../api';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface EditProgramRuleModalProps {
   isOpen: boolean;
@@ -9,11 +10,13 @@ interface EditProgramRuleModalProps {
   ruleId: number | null;
   currentCredits: number;
   onSuccess?: () => void;
+  onError?: (msg: string) => void;
 }
 
-export default function EditProgramRuleModal({ isOpen, onClose, ruleId, currentCredits, onSuccess }: EditProgramRuleModalProps) {
+export default function EditProgramRuleModal({ isOpen, onClose, ruleId, currentCredits, onSuccess, onError }: EditProgramRuleModalProps) {
   const [credits, setCredits] = useState(currentCredits);
   const [isLoading, setIsLoading] = useState(false);
+  const { userId } = useAuthStore();
 
   useEffect(() => {
     setCredits(currentCredits);
@@ -21,15 +24,19 @@ export default function EditProgramRuleModal({ isOpen, onClose, ruleId, currentC
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ruleId) return;
+    if (!ruleId || !userId) return;
     setIsLoading(true);
     try {
-      await editAdminProgramRule(ruleId, credits);
+      await editAdminProgramRule(Number(userId), Number(ruleId), Number(credits));
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Failed to edit rule:", error);
-      alert("Failed to edit required credits. Please try again.");
+      if (onError) {
+        onError("Failed to edit required credits. Please try again.");
+      } else {
+        alert("Failed to edit required credits. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

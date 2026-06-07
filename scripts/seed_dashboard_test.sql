@@ -40,13 +40,13 @@ INSERT INTO requirement_rules (
     required_credits,
     program_id
 ) VALUES
-    (201, 'Humanities', 'required', 6, 101),
-    (202, 'Sciences', 'required', 9, 101),
-    (203, 'Social Sciences', 'required', 9, 101),
-    (204, 'Required core', 'required', 35, 102),
+    (201, 'Humanities', 'core', 6, 101),
+    (202, 'Sciences', 'core', 9, 101),
+    (203, 'Social Sciences', 'core', 9, 101),
+    (204, 'Required core', 'core', 35, 102),
     (205, 'Elective', 'elective', 75, 102),
-    (206, 'Free Elective', 'elective', 18, 102),
-    (207, 'Minor Required', 'required', 35, 103);
+    (206, 'Free Elective', 'free_elective', 18, 102),
+    (207, 'Required core', 'core', 35, 103);
 
 INSERT INTO courses (course_id, course_code, course_name, credits) VALUES
     (301, 'HUM101', 'World Literature', 3),

@@ -15,7 +15,7 @@ export default function Toast({ message, type = 'info', onClose, duration = 3000
       onClose();
     }, duration);
     return () => clearTimeout(timer);
-  }, [onClose, duration]);
+  }, [message, onClose, duration]);
 
   const bgColor = {
     success: 'bg-green-500',

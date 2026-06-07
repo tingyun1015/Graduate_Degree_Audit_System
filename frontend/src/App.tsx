@@ -6,6 +6,8 @@ import AdminLogin from "./pages/AdminLogin"
 import AdminProgramList from "./pages/AdminProgramList"
 import AdminProgramDetail from "./pages/AdminProgramDetail"
 import AdminCourseList from "./pages/AdminCourseList"
+import { useToastStore } from "./store/useToastStore"
+import Toast from "./components/Toast"
 
 // 如果 localStorage 裡面沒有 student_id，就強制跳轉回首頁 ("/")
 function ProtectedStudentRoute() {
@@ -28,6 +30,8 @@ function ProtectedAdminRoute() {
 }
 
 function App() {
+  const { message: toastMessage, type: toastType, hideToast } = useToastStore();
+
   return (
     <Router>
       <Routes>
@@ -43,6 +47,13 @@ function App() {
           <Route path ="/admin/course" element={<AdminCourseList />} />
         </Route>
       </Routes>
+      {toastMessage && toastType && (
+        <Toast 
+          message={toastMessage} 
+          type={toastType} 
+          onClose={hideToast} 
+        />
+      )}
     </Router>
   )
 }

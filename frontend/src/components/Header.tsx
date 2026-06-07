@@ -7,7 +7,7 @@ import { logout as apiLogout } from '../api';
 export default function Header() {
     const { userName, role, userId, logout } = useAuthStore();
     const navigate = useNavigate();
-    const isAdmin = role === 'staff';
+    const isAdmin = role === 'admin';
 
     const handleLogout = async () => {
         try {

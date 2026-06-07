@@ -85,10 +85,10 @@ export interface ProgramDetailResponse {
 
 export interface ProgramRule {
   id: number;
-  type: 'core' | 'elective' | 'free_elective';
+  type: string;
   name: string;
-  courses?: Course[];
-  requiredCredits?: number;
+  courses: Course[] | null;
+  required_credits: number | null;
 }
   
 

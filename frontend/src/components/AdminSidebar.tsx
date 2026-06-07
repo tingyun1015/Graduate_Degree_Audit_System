@@ -1,72 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useAuthStore } from '../store/useAuthStore';
-import { useAdminStore } from '../store/useAdminStore';
-
 interface AdminSidebarProps {
     activeTab?: 'program' | 'course';
 }
 
 export default function AdminSidebar({ activeTab = 'program' }: AdminSidebarProps) {
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const { departmentList: departments } = useAuthStore();
-    const { activeDepartment: selectedDept, setActiveDepartment: setSelectedDept } = useAdminStore();
-
-    useEffect(() => {
-        if (!selectedDept && departments?.length > 0) {
-            setSelectedDept(departments[0]);
-        }
-    }, [departments, selectedDept, setSelectedDept]);
-
     return (
-        <aside className="w-[230px] shrink-0 bg-[#fff8ef] border-r border-[#d9d9d9] flex flex-col pt-[17px] sticky top-16 h-[calc(100vh-86.5px)] overflow-y-auto self-start">
-            {/* Department Selector */}
-            <div className="relative px-[21px] mb-8">
-                {selectedDept ? (
-                    <div 
-                        className="flex flex-col cursor-pointer group"
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    >
-                        <span className="text-[11px] text-black mb-1 truncate">{selectedDept.college_name}</span>
-                        <div className="flex items-center justify-between gap-2">
-                            <span className="text-[15px] text-[#23417d] font-semibold leading-tight line-clamp-2 pr-2" title={selectedDept.name}>
-                                {selectedDept.name}
-                            </span>
-                            <span className={`text-[10px] pt-[2px] shrink-0 -scale-x-120 text-black group-hover:text-[#23417d] transition-transform duration-400 ${isDropdownOpen ? 'rotate-180' : ''}`}>
-                                ▼
-                            </span>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="flex flex-col cursor-wait opacity-50">
-                        <span className="text-[11px] text-black mb-1">Loading...</span>
-                    </div>
-                )}
-
-                {/* Dropdown Menu */}
-                {isDropdownOpen && departments?.length > 0 && (
-                    <div className="absolute top-full left-[21px] right-[21px] bg-white border border-[#ccc] rounded-[4px] shadow-lg mt-1 z-10 overflow-hidden">
-                        {departments.map(dept => (
-                            <div 
-                                key={dept.id}
-                                className={`px-3 py-2 cursor-pointer transition-colors hover:bg-[#fff8ef] ${
-                                    selectedDept?.id === dept.id ? 'bg-[#fcf9f5] border-l-2 border-[#23417d]' : 'border-l-2 border-transparent'
-                                }`}
-                                onClick={() => {
-                                    setSelectedDept(dept);
-                                    setIsDropdownOpen(false);
-                                }}
-                            >
-                                <div className="text-[9px] text-gray-500 mb-0.5 truncate">{dept.college_name}</div>
-                                <div className="text-[12px] text-[#23417d] font-semibold line-clamp-2">{dept.name}</div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Divider */}
-            <div className="w-full h-px bg-[#ccc] mb-8"></div>
-
+        <aside className="w-[230px] shrink-0 bg-[#fff8ef] border-r border-[#d9d9d9] flex flex-col pt-[30px] sticky top-16 h-[calc(100vh-86.5px)] overflow-y-auto self-start">
             {/* Navigation Menu */}
             <nav className="flex flex-col gap-4">
                 <a 
