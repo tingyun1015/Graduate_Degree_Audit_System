@@ -2,29 +2,31 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Enrollment, Program, Student
+from ..models import Course, Enrollment, Program, Student, Takes
 from ..student_dashboard import (
     calculate_current_gpa,
     calculate_current_year_label,
     calculate_expected_graduation,
     format_enrollment_semester,
     get_passed_course_credits,
+    infer_planned_course_semester,
     is_main_major_program,
     is_university_program,
     normalize_degree_type,
 )
 from ..student_schemas import (
-    AuditProgramResponse,
+    AuditCourseResponse,
     AuditRuleResponse,
     CourseRecordResponse,
     CreditsSummaryResponse,
     DashboardProgramResponse,
     EnrollmentCreateRequest,
     EnrollmentItemResponse,
-    MissingCourseResponse,
-    StudentAuditResponse,
+    PlannedCourseCreateRequest,
+    StudentActionResponse,
     StudentDashboardAllResponse,
     StudentInfoResponse,
+    StudentProgramAuditResponse,
 )
 from ..student_service import (
     build_program_sub_rules,
@@ -105,82 +107,89 @@ def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
 
 # ── Audit ──────────────────────────────────────────────────────────────────────
 
-@router.get("/audit", response_model=StudentAuditResponse)
-def get_student_audit(
-    student_id: int, dept_id: int | None = None, db: Session = Depends(get_db)
+@router.get(
+    "/{student_id}/programs/{program_id}/audit",
+    response_model=StudentProgramAuditResponse,
+)
+def get_student_program_audit(
+    student_id: int, program_id: int, db: Session = Depends(get_db)
 ):
     student = get_student_with_audit_data(db, student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
-    passed_course_credits = get_passed_course_credits(student)
-    passed_course_ids = set(passed_course_credits.keys())
-    active_programs = get_active_programs(student)
+    enrollment = next(
+        (e for e in student.enrollments if e.program_id == program_id and e.program),
+        None,
+    )
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Program enrollment not found")
 
-    if dept_id is not None:
-        active_programs = [p for p in active_programs if p.dept_id == dept_id]
+    program = enrollment.program
 
-    audit_programs: list[AuditProgramResponse] = []
-    all_can_graduate = True
+    # One Takes record per course: a passed attempt wins over a planned one.
+    take_by_course: dict[int, Takes] = {}
+    for take in student.takes:
+        if not take.course:
+            continue
+        current = take_by_course.get(take.course_id)
+        if current is None or (take.is_passed and not current.is_passed):
+            take_by_course[take.course_id] = take
 
-    for program in active_programs:
-        audit_rules: list[AuditRuleResponse] = []
-        missing_courses: list[MissingCourseResponse] = []
-        program_can_graduate = True
+    audit_rules: list[AuditRuleResponse] = []
+    program_can_graduate = True
 
-        for rule in program.requirement_rules:
-            rule_course_ids = {cr.course_id for cr in rule.course_rules}
-            earned = sum(
-                credits
-                for course_id, credits in passed_course_credits.items()
-                if course_id in rule_course_ids
+    for rule in program.requirement_rules:
+        counted_courses: list[AuditCourseResponse] = []
+        planned_courses: list[AuditCourseResponse] = []
+        missing_courses: list[AuditCourseResponse] = []
+        earned = 0
+
+        for course_rule in rule.course_rules:
+            course = course_rule.course
+            if not course:
+                continue
+
+            course_response = AuditCourseResponse(
+                course_id=course.course_id,
+                course_code=course.course_code,
+                course_name=course.course_name,
+                credits=course.credits,
             )
-            remaining = max(0, rule.required_credits - earned)
+            take = take_by_course.get(course.course_id)
+            if take and take.is_passed:
+                counted_courses.append(course_response)
+                earned += course.credits
+            elif take:
+                planned_courses.append(course_response)
+            else:
+                missing_courses.append(course_response)
 
-            if remaining > 0:
-                program_can_graduate = False
+        remaining = max(0, rule.required_credits - earned)
+        if remaining > 0:
+            program_can_graduate = False
 
-            if rule.rule_type == "required":
-                for cr in rule.course_rules:
-                    if cr.course_id not in passed_course_ids and cr.course:
-                        missing_courses.append(
-                            MissingCourseResponse(
-                                course_id=cr.course.course_id,
-                                course_code=cr.course.course_code,
-                                course_name=cr.course.course_name,
-                                credits=cr.course.credits,
-                            )
-                        )
-
-            audit_rules.append(
-                AuditRuleResponse(
-                    rule_id=rule.rule_id,
-                    rule_name=rule.rule_name,
-                    rule_type=rule.rule_type,
-                    required_credits=rule.required_credits,
-                    earned_credits=earned,
-                    remaining_credits=remaining,
-                )
-            )
-
-        if not program_can_graduate:
-            all_can_graduate = False
-
-        audit_programs.append(
-            AuditProgramResponse(
-                program_id=program.program_id,
-                program_name=program.program_name,
-                program_type=program.program_type,
-                can_graduate=program_can_graduate,
-                rules=audit_rules,
+        audit_rules.append(
+            AuditRuleResponse(
+                rule_id=rule.rule_id,
+                rule_name=rule.rule_name,
+                rule_type=rule.rule_type,
+                required_credits=rule.required_credits,
+                earned_credits=earned,
+                remaining_credits=remaining,
+                counted_courses=counted_courses,
+                planned_courses=planned_courses,
                 missing_courses=missing_courses,
             )
         )
 
-    return StudentAuditResponse(
+    return StudentProgramAuditResponse(
         student_id=student_id,
-        can_graduate=all_can_graduate,
-        programs=audit_programs,
+        program_id=program.program_id,
+        program_name=program.program_name,
+        program_type=program.program_type,
+        can_graduate=program_can_graduate,
+        rules=audit_rules,
     )
 
 
@@ -256,7 +265,7 @@ def get_student_enrollments(student_id: int, db: Session = Depends(get_db)):
     ]
 
 
-@router.post("/enrollments", response_model=EnrollmentItemResponse, status_code=201)
+@router.post("/enrollments", response_model=StudentActionResponse, status_code=201)
 def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.student_id == payload.student_id).first()
     if not student:
@@ -275,28 +284,22 @@ def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_d
         .first()
     )
     if existing:
-        if existing.is_enrolled:
-            raise HTTPException(status_code=409, detail="Already enrolled in this program")
-        existing.is_enrolled = True
-        db.commit()
-    else:
-        db.add(Enrollment(
-            student_id=payload.student_id,
-            program_id=payload.program_id,
-            is_enrolled=True,
-        ))
-        db.commit()
+        raise HTTPException(status_code=409, detail="Program already added")
 
-    return EnrollmentItemResponse(
-        program_id=program.program_id,
-        program_name=program.program_name,
-        program_type=program.program_type,
-        is_enrolled=True,
-    )
+    # Student-initiated enrollments start out as planned (is_enrolled=False);
+    # becoming an active enrollment is a separate, non-student-driven step.
+    db.add(Enrollment(
+        student_id=payload.student_id,
+        program_id=payload.program_id,
+        is_enrolled=False,
+    ))
+    db.commit()
+
+    return StudentActionResponse(success=True, message="Enrollment created successfully.")
 
 
-@router.delete("/enrollments/{program_id}")
-def remove_enrollment(program_id: int, student_id: int, db: Session = Depends(get_db)):
+@router.delete("/{student_id}/programs/{program_id}", response_model=StudentActionResponse)
+def remove_planned_program(student_id: int, program_id: int, db: Session = Depends(get_db)):
     enrollment = (
         db.query(Enrollment)
         .filter(
@@ -308,6 +311,60 @@ def remove_enrollment(program_id: int, student_id: int, db: Session = Depends(ge
     if not enrollment:
         raise HTTPException(status_code=404, detail="Enrollment not found")
 
-    enrollment.is_enrolled = False
+    if enrollment.is_enrolled:
+        raise HTTPException(status_code=400, detail="Cannot delete an active enrollment")
+
+    db.delete(enrollment)
     db.commit()
-    return {"success": True, "message": "已退出 Program"}
+    return StudentActionResponse(success=True, message="Program enrollment deleted successfully.")
+
+
+# ── Planned courses ────────────────────────────────────────────────────────────
+
+@router.post("/{student_id}/courses", response_model=StudentActionResponse, status_code=201)
+def add_planned_course(
+    student_id: int, payload: PlannedCourseCreateRequest, db: Session = Depends(get_db)
+):
+    student = get_student_or_404(db, student_id)
+
+    course = db.query(Course).filter(Course.course_id == payload.course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    existing = (
+        db.query(Takes)
+        .filter(Takes.student_id == student_id, Takes.course_id == payload.course_id)
+        .first()
+    )
+    if existing:
+        if existing.is_passed:
+            raise HTTPException(status_code=409, detail="Course already completed")
+        raise HTTPException(status_code=409, detail="Course already planned")
+
+    db.add(Takes(
+        student_id=student_id,
+        course_id=payload.course_id,
+        semester=infer_planned_course_semester(),
+        is_passed=False,
+    ))
+    db.commit()
+    return StudentActionResponse(success=True, message="Planned course added successfully.")
+
+
+@router.delete("/{student_id}/courses/{course_id}", response_model=StudentActionResponse)
+def remove_planned_course(student_id: int, course_id: int, db: Session = Depends(get_db)):
+    take = (
+        db.query(Takes)
+        .filter(
+            Takes.student_id == student_id,
+            Takes.course_id == course_id,
+            Takes.is_passed.is_(False),
+        )
+        .first()
+    )
+    if not take:
+        raise HTTPException(status_code=404, detail="Planned course not found")
+
+    db.delete(take)
+    db.commit()
+    return StudentActionResponse(success=True, message="Planned course deleted successfully.")

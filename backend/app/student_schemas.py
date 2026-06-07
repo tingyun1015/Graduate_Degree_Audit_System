@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 # ── Audit ─────────────────────────────────────────────────────────────────────
 
-class MissingCourseResponse(BaseModel):
+class AuditCourseResponse(BaseModel):
     course_id: int
     course_code: str
     course_name: str
@@ -17,21 +17,18 @@ class AuditRuleResponse(BaseModel):
     required_credits: int
     earned_credits: int
     remaining_credits: int
+    counted_courses: list[AuditCourseResponse]
+    planned_courses: list[AuditCourseResponse]
+    missing_courses: list[AuditCourseResponse]
 
 
-class AuditProgramResponse(BaseModel):
+class StudentProgramAuditResponse(BaseModel):
+    student_id: int
     program_id: int
     program_name: str
     program_type: str | None
     can_graduate: bool
     rules: list[AuditRuleResponse]
-    missing_courses: list[MissingCourseResponse]
-
-
-class StudentAuditResponse(BaseModel):
-    student_id: int
-    can_graduate: bool
-    programs: list[AuditProgramResponse]
 
 
 # ── Credits summary ────────────────────────────────────────────────────────────
@@ -67,6 +64,19 @@ class EnrollmentItemResponse(BaseModel):
 class EnrollmentCreateRequest(BaseModel):
     student_id: int
     program_id: int
+
+
+# ── Shared action result (used by every mutating student endpoint) ────────────
+
+class StudentActionResponse(BaseModel):
+    success: bool
+    message: str
+
+
+# ── Planned courses ────────────────────────────────────────────────────────────
+
+class PlannedCourseCreateRequest(BaseModel):
+    course_id: int
 
 
 # ── Dashboard (existing) ───────────────────────────────────────────────────────
