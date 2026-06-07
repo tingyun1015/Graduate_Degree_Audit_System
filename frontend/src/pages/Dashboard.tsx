@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getDashboard } from '../api';
 import type { Dashboard, Program } from '../types';
 import Header from '../components/Header';
@@ -61,11 +62,15 @@ function ProgressRing({ earned, required }: { earned: number; required: number }
 
 // ─────────────────────────────────────────────
 // 小元件:Detail 按鈕
-// (Program Detail 頁的後端 API 還沒有,所以先當佔位、不跳轉)
+// 點下去跳到該 program 的詳細頁 /program/:id
 // ─────────────────────────────────────────────
-function DetailButton() {
+function DetailButton({ programId }: { programId: number }) {
+  const navigate = useNavigate();
   return (
-    <button className="bg-[#2854c5] text-white text-sm font-medium px-4 py-1.5 rounded hover:bg-[#1f43a0] transition-colors">
+    <button
+      onClick={() => navigate(`/program/${programId}`)}
+      className="bg-[#2854c5] text-white text-sm font-medium px-4 py-1.5 rounded hover:bg-[#1f43a0] transition-colors"
+    >
       Detail →
     </button>
   );
@@ -178,7 +183,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* 右:Detail 按鈕 */}
-                  <DetailButton />
+                  <DetailButton programId={program.program_id} />
                 </div>
               );
             })}
@@ -218,7 +223,7 @@ export default function Dashboard() {
             </div>
 
             {/* 右:Detail 按鈕 */}
-            <DetailButton />
+            <DetailButton programId={program.program_id} />
           </section>
         ))}
 
@@ -248,7 +253,7 @@ export default function Dashboard() {
                     )}
                   </div>
                   <ProgressRing earned={earned} required={required} />
-                  <DetailButton />
+                  <DetailButton programId={program.program_id} />
                 </div>
               );
             })}
