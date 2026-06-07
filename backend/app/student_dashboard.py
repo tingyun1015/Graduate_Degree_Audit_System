@@ -90,6 +90,21 @@ def calculate_current_gpa(student: Student) -> float:
     return round((average_score / 100) * 4.3, 2)
 
 
+def infer_planned_course_semester() -> str:
+    """Best-guess upcoming semester label (e.g. "2026-1") for a newly planned course.
+
+    Mirrors the "academic year flips in September" convention used by
+    calculate_current_year_label: Sep-Dec/Jan belong to the fall term ("-1"),
+    Feb-Aug belong to the spring term ("-2").
+    """
+    now = datetime.now()
+    if now.month >= 9:
+        return f"{now.year}-1"
+    if now.month == 1:
+        return f"{now.year - 1}-1"
+    return f"{now.year}-2"
+
+
 def get_passed_course_credits(student: Student) -> dict[int, int]:
     passed_course_credits: dict[int, int] = {}
     for take in student.takes:
