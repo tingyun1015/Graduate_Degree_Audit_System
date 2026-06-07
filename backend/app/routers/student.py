@@ -31,6 +31,7 @@ from ..student_schemas import (
 from ..student_service import (
     build_program_sub_rules,
     get_active_programs,
+    get_planned_programs,
     get_primary_program,
     get_student_with_audit_data,
     get_student_with_related_data,
@@ -52,6 +53,7 @@ def get_student_or_404(db: Session, student_id: int) -> Student:
 def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
     student = get_student_or_404(db, student_id)
     active_programs = get_active_programs(student)
+    planned_programs = get_planned_programs(student)
     primary_program = get_primary_program(student, active_programs)
     passed_course_credits = get_passed_course_credits(student)
     degree_type = normalize_degree_type(
@@ -59,7 +61,7 @@ def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
     )
 
     programs = []
-    for program in active_programs:
+    for program in active_programs + planned_programs:
         sub_rules, _ = build_program_sub_rules(program, passed_course_credits)
 
         is_main_major = bool(
@@ -70,6 +72,8 @@ def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
             program_type = "University Requirements"
         elif is_main_major:
             program_type = "Main Major"
+        elif program in planned_programs:
+            program_type = "Planned"
         else:
             program_type = program.program_type
 

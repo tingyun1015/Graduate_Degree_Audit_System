@@ -187,3 +187,14 @@ export interface StudentEnrollment {
   program_type: string | null;
   is_enrolled: boolean;
 }
+
+// 課程目錄裡的一個 program(對應 GET /api/programs 的單筆,給 Add Program 下拉用)
+export interface ProgramOption {
+  program_id: number;
+  program_name: string;
+  program_type: string | null;
+  total_credits_required: number;
+  effective_year: number;
+  is_published: boolean;
+  dept_id: number | null;
+}
