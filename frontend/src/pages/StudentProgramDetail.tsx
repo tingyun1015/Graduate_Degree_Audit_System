@@ -43,6 +43,29 @@ function ProgramSummaryCard() {
 }
 
 // ─────────────────────────────────────────────
+// 左欄:Add Planned Course 卡(搜尋框 + Add 按鈕)
+// 後端還沒有「加選計畫」功能,所以 Add 先做成 disabled 灰色
+// ─────────────────────────────────────────────
+function AddPlannedCourseCard() {
+  return (
+    <section className="bg-white border border-[#cccccc] rounded-[4px] px-[25px] pt-[25px] pb-[10px] flex flex-col gap-5">
+      <h3 className="text-[15px] font-bold text-[#23417d]">Add Planned Course</h3>
+      <input
+        type="text"
+        placeholder="search course name or course id..."
+        className="w-full h-10 border border-[#d9d9d9] rounded-[4px] px-3 text-[14px] placeholder:text-black/55 focus:outline-none focus:border-[#2854c5] transition-colors"
+      />
+      <button
+        disabled
+        className="w-full h-[33px] bg-[#d9d9d9] text-white text-[12px] font-semibold rounded-[4px] cursor-not-allowed"
+      >
+        Add
+      </button>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────
 // 課程狀態 → 圖示/顏色/動作 的對照表
 // 用一張表決定三件事,程式就不用寫一堆 if
 // ─────────────────────────────────────────────
@@ -221,7 +244,7 @@ export default function StudentProgramDetail() {
           {/* 左欄(固定寬) */}
           <div className="w-[430px] shrink-0 flex flex-col gap-5">
             <ProgramSummaryCard />
-            {/* TODO commit 4:Add Planned Course 卡 */}
+            <AddPlannedCourseCard />
           </div>
 
           {/* 右欄(伸縮) —— 標題與圖例已移到上方頂部列,讓左右白卡齊頭 */}
