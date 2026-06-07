@@ -84,6 +84,7 @@ export interface ProgramDetailResponse {
 }
 
 export interface ProgramRule {
+  id: number;
   type: 'core' | 'elective' | 'free_elective';
   name: string;
   courses?: Course[];
@@ -93,18 +94,22 @@ export interface ProgramRule {
 
 export interface Course {
   id: number;
-  code: string;
-  name: string;
-  credit: number;
+  course_code: string;
+  course_name: string;
+  credits: number;
   term?: string;
 }
   
 export interface CourseListResponse {
+  total_pages: number;
+  page_num: number;
+  courses: Course[];
+}
+
+export interface CourseResponse {
   success: boolean;
   message: string;
-  data: {
-    courses: Course[];
-  }
+  data: Course;
 }
 
 

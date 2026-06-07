@@ -17,7 +17,7 @@ from .models import (  # noqa: F401
     Takes,
     CourseRule,
 )
-from .routers import admin, auth, courses, departments, programs, student
+from .routers import admin, admin_programs, auth, courses, departments, programs, student
 
 app = FastAPI(
     title="Graduate Degree Audit System API",
@@ -39,6 +39,7 @@ app.include_router(courses.router)
 app.include_router(programs.router)
 app.include_router(departments.router)
 app.include_router(admin.router)
+app.include_router(admin_programs.router)
 
 
 @app.on_event("startup")
@@ -51,6 +52,12 @@ def on_startup() -> None:
             text(
                 "ALTER TABLE users "
                 "ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE courses "
+                "ADD COLUMN IF NOT EXISTS term VARCHAR(50)"
             )
         )
 
