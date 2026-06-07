@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Tag from '../components/Tag';
-import { getStudentProgramDetail } from '../api';
+import { getStudentAudit, getStudentEnrollments, deleteStudentProgram } from '../api';
 import type {
+  Audit,
+  AuditCourse,
   CourseStatus,
   StudentCourseRow,
   StudentProgramRule,
@@ -179,6 +181,39 @@ function AddPlannedCourseCard() {
   );
 }
 
+// ─────────────────────────────────────────────
+// 把後端 audit 回應 + enrollment 的 is_enrolled
+// 組成畫面要的 StudentProgramDetailData
+//  counted_courses → done / planned_courses → planned / missing_courses → missing
+//  collegeLine、term 後端不提供(QA 已確認)→ 留空
+// ─────────────────────────────────────────────
+function auditToDetail(audit: Audit, isEnrolled: boolean): StudentProgramDetailData {
+  const toRow = (status: CourseStatus) => (c: AuditCourse): StudentCourseRow => ({
+    status,
+    code: c.course_code,
+    name: c.course_name,
+    credits: String(c.credits),
+    term: '',
+  });
+
+  return {
+    programType: audit.program_type ?? '',
+    programName: audit.program_name,
+    collegeLine: '',
+    isEnrolled,
+    rules: audit.rules.map((rule) => ({
+      name: rule.rule_name,
+      earned: rule.earned_credits,
+      required: rule.required_credits,
+      courses: [
+        ...rule.counted_courses.map(toRow('done')),
+        ...rule.planned_courses.map(toRow('planned')),
+        ...rule.missing_courses.map(toRow('missing')),
+      ],
+    })),
+  };
+}
+
 // ═════════════════════════════════════════════
 // 學生端:單一 Program 的詳細頁
 // 從 Dashboard 點某個 program 的「Detail →」會進到這裡
@@ -190,16 +225,34 @@ export default function StudentProgramDetail() {
   const programId = Number(id);
 
   const navigate = useNavigate();
+  // 登入時存進 localStorage 的資料(跟 Dashboard 用同一組 key)
+  const studentId = Number(localStorage.getItem('student_id')) || 1;
   const userName = localStorage.getItem('user_name') || '王小明';
 
-  // 用 id 去拿這個 program 的資料(目前是假資料,不同 id 回不同內容)
   const [detail, setDetail] = useState<StudentProgramDetailData | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getStudentProgramDetail(programId).then(setDetail);
-  }, [programId]);
+    // audit 沒有 is_enrolled,所以同時打 enrollments,用 program_id 對起來
+    Promise.all([
+      getStudentAudit(studentId, programId),
+      getStudentEnrollments(studentId),
+    ])
+      .then(([audit, enrollments]) => {
+        const match = enrollments.find((e) => e.program_id === programId);
+        const isEnrolled = match?.is_enrolled ?? true;
+        setDetail(auditToDetail(audit, isEnrolled));
+      })
+      .catch((err) => {
+        console.error(err);
+        setError('無法載入這個 program 的資料,請稍後再試');
+      });
+  }, [studentId, programId]);
 
-  // 資料還沒回來前先顯示載入中
+  // 載入失敗 / 載入中
+  if (error) {
+    return <p className="p-5 text-[#be3c32]">{error}</p>;
+  }
   if (!detail) {
     return <p className="p-5">載入中...</p>;
   }
@@ -221,11 +274,19 @@ export default function StudentProgramDetail() {
             {/* 只有 planned(is_enrolled=false)才出現 Delete Plan */}
             {!detail.isEnrolled && (
               <button
-                onClick={() => {
-                  // 後端:DELETE /api/student/{sid}/programs/{pid}(只能刪 planned)
-                  // 目前先做前端確認 + 退回 dashboard,接後端後再換成真的 fetch
-                  if (window.confirm('確定要刪除這個計畫嗎?')) {
+                onClick={async () => {
+                  // 後端:DELETE /api/student/{sid}/programs/{pid}(只能刪 planned,已 enrolled 會被後端拒絕)
+                  if (!window.confirm('確定要刪除這個計畫嗎?')) return;
+                  try {
+                    const res = await deleteStudentProgram(studentId, programId);
+                    if (!res.success) {
+                      window.alert(res.message || '刪除失敗');
+                      return;
+                    }
                     navigate('/dashboard');
+                  } catch (err) {
+                    console.error(err);
+                    window.alert('刪除失敗,請稍後再試');
                   }
                 }}
                 className="bg-[#c0392b] text-white text-[13px] font-medium rounded-[4px] px-3 py-1.5 hover:brightness-95 transition"

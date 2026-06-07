@@ -1,4 +1,4 @@
-import type { Dashboard, LoginResponse, CourseListResponse, LoginAdminResponse, CourseResponse, AdminProgramListResponse, ProgramDetailResponse, Program, Course, StudentProgramDetailData } from './types';
+import type { Dashboard, LoginResponse, CourseListResponse, AdminLoginResponse, CourseResponse, AdminProgramListResponse, ProgramDetailResponse, Program, Course, Audit, StudentActionResponse, StudentEnrollment } from './types';
 const BASE_URL = 'http://localhost:8000';
 
 
@@ -22,143 +22,6 @@ export async function getDashboard(studentId: number): Promise<Dashboard> {
     throw new Error('無法取得 dashboard 資料');
   }
   return response.json();
-}
-
-// 學生端 program 詳細頁的假資料,用 program_id 當 key
-// 不同 program 點進來會看到不同內容
-const MOCK_PROGRAM_DETAILS: Record<number, StudentProgramDetailData> = {
-  101: {
-    programType: 'University Requirements',
-    programName: 'General Education',
-    collegeLine: 'University Wide · Sep. 2023',
-    isEnrolled: true,
-    rules: [
-      {
-        name: 'Humanities',
-        earned: 6,
-        required: 6,
-        courses: [
-          { status: 'done', code: 'HUM101', name: 'World Literature', credits: '3 cr', term: 'Y1·Fall' },
-          { status: 'done', code: 'HUM102', name: 'Philosophy', credits: '3 cr', term: 'Y1·Spring' },
-        ],
-      },
-      {
-        name: 'Sciences',
-        earned: 6,
-        required: 9,
-        courses: [
-          { status: 'done', code: 'SCI101', name: 'Physics I', credits: '3 cr', term: 'Y1·Fall' },
-          { status: 'done', code: 'SCI102', name: 'Biology I', credits: '3 cr', term: 'Y2·Fall' },
-          { status: 'missing', code: 'SCI103', name: 'Chemistry I', credits: '3 cr', term: '—' },
-        ],
-      },
-    ],
-  },
-  102: {
-    programType: 'Main Major',
-    programName: 'BS Computer Science',
-    collegeLine: 'College of Information · Sep. 2023',
-    isEnrolled: true,
-    rules: [
-      {
-        name: 'Required core',
-        earned: 32,
-        required: 35,
-        courses: [
-          { status: 'done', code: 'CS1101', name: 'Intro to Programming', credits: '3 cr', term: 'Y1·Fall' },
-          { status: 'done', code: 'CS2210', name: 'Data Structures', credits: '3 cr', term: 'Y1·Spring' },
-          { status: 'done', code: 'CS3001', name: 'Algorithms', credits: '3 cr', term: 'Y2·Spring' },
-          { status: 'planned', code: 'CS3210', name: 'Operating Systems', credits: '3 cr', term: 'Y3·Fall' },
-          { status: 'missing', code: 'CS3500', name: 'Software Engineering', credits: '3 cr', term: '—' },
-        ],
-      },
-      {
-        name: 'Elective',
-        earned: 9,
-        required: 75,
-        courses: [
-          { status: 'done', code: 'CS5103', name: 'Machine Learning', credits: '3 cr', term: 'Y1·Fall' },
-          { status: 'done', code: 'CS5210', name: 'Computer Vision', credits: '3 cr', term: 'Y1·Spring' },
-          { status: 'done', code: 'CS5021', name: 'Database Systems', credits: '3 cr', term: 'Y2·Spring' },
-          { status: 'planned', code: 'CS5310', name: 'Distributed Systems', credits: '3 cr', term: '—' },
-          { status: 'missing', code: 'CS5503', name: 'Software Testing', credits: '3 cr', term: '—' },
-        ],
-      },
-      {
-        name: 'Free Elective',
-        earned: 6,
-        required: 18,
-        courses: [
-          { status: 'done', code: 'DE1204', name: 'Design Thinking', credits: '3 cr', term: 'Y1·Fall' },
-          { status: 'done', code: 'DE5310', name: 'User Experience Design', credits: '3 cr', term: 'Y1·Spring' },
-        ],
-      },
-    ],
-  },
-  103: {
-    programType: 'Minor',
-    programName: 'Advertising',
-    collegeLine: 'College of Communication · Sep. 2023',
-    isEnrolled: true,
-    rules: [
-      {
-        name: 'Minor Required',
-        earned: 12,
-        required: 35,
-        courses: [
-          { status: 'done', code: 'ADV101', name: 'Advertising Principles', credits: '4 cr', term: 'Y2·Fall' },
-          { status: 'done', code: 'ADV102', name: 'Consumer Behavior', credits: '4 cr', term: 'Y2·Spring' },
-          { status: 'planned', code: 'ADV201', name: 'Copywriting', credits: '4 cr', term: '—' },
-          { status: 'missing', code: 'ADV202', name: 'Media Planning', credits: '4 cr', term: '—' },
-        ],
-      },
-    ],
-  },
-  // 104:planned(學生自己加的計畫,is_enrolled=false)
-  104: {
-    programType: 'Credit Program',
-    programName: 'Design Certificate',
-    collegeLine: 'College of Design',
-    isEnrolled: false,
-    rules: [
-      {
-        name: 'Required core',
-        earned: 32,
-        required: 35,
-        courses: [
-          { status: 'done', code: 'DC1101', name: 'Design Fundamentals', credits: '3 cr', term: 'Y1·Fall' },
-          { status: 'done', code: 'DC1202', name: 'Visual Communication', credits: '3 cr', term: 'Y1·Spring' },
-          { status: 'done', code: 'DC2103', name: 'Typography', credits: '3 cr', term: 'Y2·Fall' },
-          { status: 'planned', code: 'DC2204', name: 'Interaction Design', credits: '3 cr', term: '—' },
-          { status: 'missing', code: 'DC3105', name: 'Design Studio', credits: '3 cr', term: '—' },
-        ],
-      },
-      {
-        name: 'Elective',
-        earned: 9,
-        required: 75,
-        courses: [
-          { status: 'done', code: 'DC5101', name: 'Motion Graphics', credits: '3 cr', term: 'Y2·Spring' },
-          { status: 'planned', code: 'DC5202', name: 'Service Design', credits: '3 cr', term: '—' },
-          { status: 'missing', code: 'DC5303', name: 'Design Research', credits: '3 cr', term: '—' },
-        ],
-      },
-      {
-        name: 'Free Elective',
-        earned: 0,
-        required: 0,
-        courses: [],
-      },
-    ],
-  },
-};
-
-export async function getStudentProgramDetail(programId: number): Promise<StudentProgramDetailData> {
-  // TODO: 後端好了之後改成
-  //   const res = await fetch(`${BASE_URL}/api/student/program/${programId}`);
-  //   return res.json();
-  // 找不到對應 id 就先回 102 當預設,避免畫面壞掉
-  return MOCK_PROGRAM_DETAILS[programId] ?? MOCK_PROGRAM_DETAILS[102];
 }
 
 // TODO: 取得某個 student 在某個 program 下的 audit 結果
@@ -220,6 +83,20 @@ export async function getStudentAudit(studentId: number, programId: number): Pro
   });
 }
 
+// 取得某 student 的所有 enrollment(含 is_enrolled,用來判斷 planned/enrolled)
+// GET /api/student/enrollments?student_id=X
+export async function getStudentEnrollments(studentId: number): Promise<StudentEnrollment[]> {
+  return await fetch(`${BASE_URL}/api/student/enrollments?student_id=${studentId}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  }).then((res) => {
+    if (!res.ok) {
+      throw new Error('無法取得 enrollment 資料');
+    }
+    return res.json();
+  });
+}
+
 // TODO: 建立 student 的 program enrollment
 // POST /api/student/enrollments
 // payload: {
@@ -244,7 +121,7 @@ export async function getStudentAudit(studentId: number, programId: number): Pro
 //     }
 //   }
 // }
-export async function addStudentProgram(studentId: number, programId: number): Promise<Audit> {
+export async function addStudentProgram(studentId: number, programId: number): Promise<StudentActionResponse> {
   return await fetch(`${BASE_URL}/api/student/enrollments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -266,7 +143,7 @@ export async function addStudentProgram(studentId: number, programId: number): P
 //   "success": true,
 //   "message": "Program enrollment deleted successfully."
 // }
-export async function deleteStudentProgram(studentId: number, programId: number): Promise<Audit> {
+export async function deleteStudentProgram(studentId: number, programId: number): Promise<StudentActionResponse> {
   return await fetch(`${BASE_URL}/api/student/${studentId}/programs/${programId}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
@@ -327,7 +204,7 @@ export async function getAllPrograms(): Promise<{
 */
 
 // Admin Login
-export async function loginAdmin(email: string, password: string): Promise<LoginAdminResponse> {
+export async function loginAdmin(email: string, password: string): Promise<AdminLoginResponse> {
   const response = await fetch(`${BASE_URL}/api/admin/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
