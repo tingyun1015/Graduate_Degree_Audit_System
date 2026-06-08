@@ -33,7 +33,15 @@ def is_university_program(program: Program) -> bool:
 
 
 def is_main_major_program(student: Student, program: Program) -> bool:
-    enrollment = next((e for e in student.enrollments if e.program_id == program.program_id and (program.program_type or "").strip().lower() == "major"), None)
+    enrollment = next(
+        (
+            e
+            for e in student.enrollments
+            if e.program_id == program.program_id
+            and (program.program_type or "").strip().lower() == "major"
+        ),
+        None,
+    )
     if enrollment and enrollment.is_main:
         return True
     return False

@@ -8,11 +8,35 @@ INSERT INTO departments (dept_id, dept_name) VALUES
 INSERT INTO users (user_id, email, password_hash, role) VALUES
     (1, 'student001@university.edu.tw', 'my_password', 'student'),
     (2, 'admin001@university.edu.tw', 'admin_password', 'staff'),
-    (3, 'student002@university.edu.tw', 'my_password', 'student');
+    (3, 'student002@university.edu.tw', 'my_password', 'student'),
+    (4, 'student003@university.edu.tw', 'my_password', 'student'),
+    (5, 'student004@university.edu.tw', 'my_password', 'student'),
+    (6, 'student005@university.edu.tw', 'my_password', 'student'),
+    (7, 'student006@university.edu.tw', 'my_password', 'student'),
+    (8, 'student007@university.edu.tw', 'my_password', 'student'),
+    (9, 'student008@university.edu.tw', 'my_password', 'student'),
+    (10, 'student009@university.edu.tw', 'my_password', 'student'),
+    (11, 'student010@university.edu.tw', 'my_password', 'student'),
+    (12, 'student011@university.edu.tw', 'my_password', 'student'),
+    (13, 'student012@university.edu.tw', 'my_password', 'student'),
+    (14, 'student013@university.edu.tw', 'my_password', 'student'),
+    (15, 'student014@university.edu.tw', 'my_password', 'student');
 
 INSERT INTO students (student_id, name, enrollment_year, type, dept_id) VALUES
     (1, '王小明', 2023, 'full_time', 1),
-    (3, '李小八', 2024, 'full_time', 1);
+    (3, '李小八', 2024, 'full_time', 1),
+    (4, '測試學生03', 2024, 'full_time', 1),
+    (5, '測試學生04', 2024, 'full_time', 1),
+    (6, '測試學生05', 2024, 'full_time', 1),
+    (7, '測試學生06', 2024, 'full_time', 1),
+    (8, '測試學生07', 2024, 'full_time', 1),
+    (9, '測試學生08', 2024, 'full_time', 1),
+    (10, '測試學生09', 2024, 'full_time', 1),
+    (11, '測試學生10', 2024, 'full_time', 1),
+    (12, '測試學生11', 2024, 'full_time', 1),
+    (13, '測試學生12', 2024, 'full_time', 1),
+    (14, '測試學生13', 2024, 'full_time', 1),
+    (15, '測試學生14', 2024, 'full_time', 1);
 
 INSERT INTO staff (staff_id, name) VALUES
     (2, '系統管理員');
@@ -36,7 +60,32 @@ INSERT INTO enrollments (student_id, program_id, is_enrolled, is_main) VALUES
     (1, 103, true, false),
     -- 李小八:只選 101 + 102,故意不選 103(Advertising)→ 留著測 + Add Program
     (3, 101, true, true),
-    (3, 102, true, false);
+    (3, 102, true, false),
+    -- 其餘學生只綁定主修,保留 103 給各 VU 獨立新增/刪除
+    (4, 101, true, true),
+    (4, 102, true, false),
+    (5, 101, true, true),
+    (5, 102, true, false),
+    (6, 101, true, true),
+    (6, 102, true, false),
+    (7, 101, true, true),
+    (7, 102, true, false),
+    (8, 101, true, true),
+    (8, 102, true, false),
+    (9, 101, true, true),
+    (9, 102, true, false),
+    (10, 101, true, true),
+    (10, 102, true, false),
+    (11, 101, true, true),
+    (11, 102, true, false),
+    (12, 101, true, true),
+    (12, 102, true, false),
+    (13, 101, true, true),
+    (13, 102, true, false),
+    (14, 101, true, true),
+    (14, 102, true, false),
+    (15, 101, true, true),
+    (15, 102, true, false);
 
 INSERT INTO requirement_rules (
     rule_id,

@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
 
-from .database import Base, engine, get_db  # noqa: F401
+from .database import get_db  # noqa: F401
 
-# Import ALL models so Base.metadata knows about every table before create_all
+# Import ALL models so SQLAlchemy relationship metadata is fully registered.
 from .models import (  # noqa: F401
     User,
     Student,
@@ -41,27 +40,6 @@ app.include_router(departments.router)
 app.include_router(admin.router)
 app.include_router(admin_programs.router)
 
-
-@app.on_event("startup")
-def on_startup() -> None:
-    """Create all tables on first run (development convenience)."""
-    Base.metadata.create_all(bind=engine)
-    with engine.begin() as connection:
-        # Keep existing local databases usable without a full migration setup.
-        connection.execute(
-            text(
-                "ALTER TABLE users "
-                "ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)"
-            )
-        )
-        connection.execute(
-            text(
-                "ALTER TABLE courses "
-                "ADD COLUMN IF NOT EXISTS term VARCHAR(50)"
-            )
-        )
-
-
 @app.get("/", tags=["General"])
 def read_root():
     return {"message": "Graduate Degree Audit System backend is running"}
@@ -69,7 +47,7 @@ def read_root():
 
 @app.get("/health", tags=["General"])
 def read_health():
-    from sqlalchemy.orm import Session
+    from sqlalchemy import text
     from .database import engine
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
