@@ -30,10 +30,22 @@ docker compose run --rm db-init
 docker compose up --build -d backend
 
 # 4. 匯入 dashboard 測試資料
-docker exec -i graduate_audit_db psql -U postgres -d graduate_audit < scripts/seed_dashboard_test.sql
+docker exec -i graduate_audit_db psql -v ON_ERROR_STOP=1 -U postgres -d graduate_audit < scripts/seed_dashboard_test.sql
 
 # 5. 啟動前端
 docker compose up -d frontend
+```
+
+If `backend/app/models.py` has changed and your local Docker image is stale, rebuild before `db-init`:
+
+```bash
+docker compose build backend db-init
+```
+
+If the database schema is out of sync with the models, recreate the volume and run the setup again:
+
+```bash
+docker compose down -v
 ```
 
 ## get schema
@@ -49,7 +61,7 @@ docker exec graduate_audit_db psql -U postgres -d graduate_audit -c "\d+"
 
 ## Database Schema
 
-The database schema is currently defined in `backend/app/models.py` and created on backend startup with SQLAlchemy.
+The database schema is currently defined in `backend/app/models.py` and created by the `db-init` service with SQLAlchemy.
 
 ### users
 
@@ -123,6 +135,7 @@ The database schema is currently defined in `backend/app/models.py` and created 
 | `student_id` | integer | PK, FK -> `students.student_id`, on delete cascade |
 | `program_id` | integer | PK, FK -> `programs.program_id`, on delete cascade |
 | `is_enrolled` | boolean | not null, default `true` |
+| `is_main` | boolean | not null, default `false` |
 
 ### takes
 
