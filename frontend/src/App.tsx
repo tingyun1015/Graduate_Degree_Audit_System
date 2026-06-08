@@ -1,4 +1,4 @@
-import { Route, BrowserRouter as Router, Routes, Navigate, Outlet } from "react-router-dom"
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom"
 import Login from "./pages/Login"
 import Dashboard from "./pages/Dashboard"
 import StudentProgramDetail from "./pages/StudentProgramDetail"
@@ -8,26 +8,7 @@ import AdminProgramDetail from "./pages/AdminProgramDetail"
 import AdminCourseList from "./pages/AdminCourseList"
 import { useToastStore } from "./store/useToastStore"
 import Toast from "./components/Toast"
-
-// 如果 localStorage 裡面沒有 student_id，就強制跳轉回首頁 ("/")
-function ProtectedStudentRoute() {
-  const isAuthenticated = !!localStorage.getItem('student_id');
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-  return <Outlet />;
-}
-
-// 如果 localStorage 裡面沒有 admin_id，就強制跳轉回首頁 ("/")
-function ProtectedAdminRoute() {
-  const isAuthenticated = !!localStorage.getItem('admin_id');
-
-  if (!isAuthenticated) {
-    return <Navigate to="/admin" replace />;
-  }
-  return <Outlet />;
-}
+import { ProtectedStudentRoute, ProtectedAdminRoute } from "./components/ProtectedRoute"
 
 function App() {
   const { message: toastMessage, type: toastType, hideToast } = useToastStore();

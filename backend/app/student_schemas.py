@@ -108,3 +108,29 @@ class DashboardProgramResponse(BaseModel):
 class StudentDashboardAllResponse(BaseModel):
     student_info: StudentInfoResponse
     programs: list[DashboardProgramResponse]
+
+
+# ── Full graduation audit (all enrolled programs) ──────────────────────────────
+
+class AuditRuleSummaryResponse(BaseModel):
+    rule_id: int
+    rule_name: str
+    rule_type: str
+    required_credits: int
+    earned_credits: int
+    remaining_credits: int
+
+
+class ProgramAuditSummaryResponse(BaseModel):
+    program_id: int
+    program_name: str
+    program_type: str | None
+    can_graduate: bool
+    rules: list[AuditRuleSummaryResponse]
+    missing_courses: list[AuditCourseResponse]
+
+
+class StudentAuditResponse(BaseModel):
+    student_id: int
+    can_graduate: bool
+    programs: list[ProgramAuditSummaryResponse]

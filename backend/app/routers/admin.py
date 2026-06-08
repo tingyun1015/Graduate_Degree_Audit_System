@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, selectinload
 
 from ..admin_schemas import RoleUpdateRequest, StaffResponse, UserCreateRequest, UserResponse
+from ..course_schemas import CourseResponse, CourseUpdateRequest
 from ..database import get_db
-from ..models import Staff, Student, User
+from ..models import Course, Staff, Student, User
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -103,6 +104,22 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     db.delete(user)
     db.commit()
+
+
+@router.put("/courses/{course_id}", response_model=CourseResponse)
+def admin_update_course(
+    course_id: int,
+    payload: CourseUpdateRequest,
+    db: Session = Depends(get_db),
+):
+    course = db.query(Course).filter(Course.course_id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    for field, value in payload.model_dump(exclude_none=True).items():
+        setattr(course, field, value)
+    db.commit()
+    db.refresh(course)
+    return course
 
 
 @router.get("/staff", response_model=list[StaffResponse])

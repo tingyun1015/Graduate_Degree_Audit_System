@@ -17,13 +17,16 @@ from ..student_dashboard import (
 from ..student_schemas import (
     AuditCourseResponse,
     AuditRuleResponse,
+    AuditRuleSummaryResponse,
     CourseRecordResponse,
     CreditsSummaryResponse,
     DashboardProgramResponse,
     EnrollmentCreateRequest,
     EnrollmentItemResponse,
     PlannedCourseCreateRequest,
+    ProgramAuditSummaryResponse,
     StudentActionResponse,
+    StudentAuditResponse,
     StudentDashboardAllResponse,
     StudentInfoResponse,
     StudentProgramAuditResponse,
@@ -110,6 +113,92 @@ def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
 
 
 # ── Audit ──────────────────────────────────────────────────────────────────────
+
+@router.get("/audit", response_model=StudentAuditResponse)
+def get_student_audit_all(
+    student_id: int,
+    dept_id: int | None = None,
+    db: Session = Depends(get_db),
+):
+    student = get_student_with_audit_data(db, student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    take_by_course: dict[int, Takes] = {}
+    for take in student.takes:
+        if not take.course:
+            continue
+        current = take_by_course.get(take.course_id)
+        if current is None or (take.is_passed and not current.is_passed):
+            take_by_course[take.course_id] = take
+
+    active_enrollments = [e for e in student.enrollments if e.is_enrolled and e.program]
+    if dept_id is not None:
+        active_enrollments = [e for e in active_enrollments if e.program.dept_id == dept_id]
+
+    program_summaries: list[ProgramAuditSummaryResponse] = []
+    overall_can_graduate = True
+
+    for enrollment in active_enrollments:
+        program = enrollment.program
+        rules_summary: list[AuditRuleSummaryResponse] = []
+        program_can_graduate = True
+        missing_courses: list[AuditCourseResponse] = []
+
+        for rule in program.requirement_rules:
+            earned = 0
+            for cr in rule.course_rules:
+                course = cr.course
+                if not course:
+                    continue
+                take = take_by_course.get(course.course_id)
+                if take and take.is_passed:
+                    earned += course.credits
+                elif rule.rule_type in ("required", "core"):
+                    missing_courses.append(
+                        AuditCourseResponse(
+                            course_id=course.course_id,
+                            course_code=course.course_code,
+                            course_name=course.course_name,
+                            credits=course.credits,
+                        )
+                    )
+
+            remaining = max(0, rule.required_credits - earned)
+            if remaining > 0:
+                program_can_graduate = False
+
+            rules_summary.append(
+                AuditRuleSummaryResponse(
+                    rule_id=rule.rule_id,
+                    rule_name=rule.rule_name,
+                    rule_type=rule.rule_type,
+                    required_credits=rule.required_credits,
+                    earned_credits=earned,
+                    remaining_credits=remaining,
+                )
+            )
+
+        if not program_can_graduate:
+            overall_can_graduate = False
+
+        program_summaries.append(
+            ProgramAuditSummaryResponse(
+                program_id=program.program_id,
+                program_name=program.program_name,
+                program_type=program.program_type,
+                can_graduate=program_can_graduate,
+                rules=rules_summary,
+                missing_courses=missing_courses,
+            )
+        )
+
+    return StudentAuditResponse(
+        student_id=student_id,
+        can_graduate=overall_can_graduate,
+        programs=program_summaries,
+    )
+
 
 @router.get(
     "/{student_id}/programs/{program_id}/audit",
@@ -317,6 +406,27 @@ def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_d
     db.commit()
 
     return StudentActionResponse(success=True, message="Enrollment created successfully.")
+
+
+@router.delete("/enrollments/{program_id}", response_model=StudentActionResponse)
+def withdraw_from_program(
+    program_id: int,
+    student_id: int,
+    db: Session = Depends(get_db),
+):
+    enrollment = (
+        db.query(Enrollment)
+        .filter(
+            Enrollment.student_id == student_id,
+            Enrollment.program_id == program_id,
+        )
+        .first()
+    )
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+    enrollment.is_enrolled = False
+    db.commit()
+    return StudentActionResponse(success=True, message="已退出 Program")
 
 
 @router.delete("/{student_id}/programs/{program_id}", response_model=StudentActionResponse)
