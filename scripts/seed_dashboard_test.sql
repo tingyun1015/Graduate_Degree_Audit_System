@@ -98,7 +98,7 @@ INSERT INTO requirement_rules (
     (202, 'Sciences', 'core', 9, 101),
     (203, 'Social Sciences', 'core', 9, 101),
     (204, 'Required core', 'core', 35, 102),
-    (205, 'Elective', 'elective', 75, 102),
+    (205, 'Elective', 'elective', 6, 102),
     (206, 'Free Elective', 'free_elective', 18, 102),
     (207, 'Required core', 'core', 35, 103),
     (208, 'Elective', 'elective', 35, 103),

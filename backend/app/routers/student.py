@@ -154,7 +154,7 @@ def get_student_audit_all(
                 take = take_by_course.get(course.course_id)
                 if take and take.is_passed:
                     earned += course.credits
-                elif rule.rule_type in ("required", "core"):
+                elif rule.rule_type in ("required", "core", "elective"):
                     missing_courses.append(
                         AuditCourseResponse(
                             course_id=course.course_id,
@@ -255,7 +255,7 @@ def get_student_program_audit(
                 earned += course.credits
             elif take:
                 planned_courses.append(course_response)
-            else:
+            elif rule.rule_type in ("required", "core", "elective"):
                 missing_courses.append(course_response)
 
         remaining = max(0, rule.required_credits - earned)
