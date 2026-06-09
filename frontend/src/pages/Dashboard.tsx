@@ -340,14 +340,14 @@ export default function Dashboard() {
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
             Additional Programs
           </h3>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6 auto-rows-fr">
             {/* 其他學程(如 Minor):用環圈呈現 */}
             {otherPrograms.map((program) => {
               const { earned, required } = programTotals(program);
               return (
                 <div
                   key={program.program_id}
-                  className="bg-white border border-[#e5e0d8] rounded-lg px-6 py-5 flex items-center gap-5"
+                  className="bg-white border border-[#e5e0d8] rounded-lg px-6 py-5 flex items-center gap-5 h-full"
                 >
                   <div className="flex-1">
                     <Tag 
@@ -367,7 +367,7 @@ export default function Dashboard() {
             {/* 新增學程:點擊開啟 + New Program 視窗 */}
             <button
               onClick={openAddProgram}
-              className="border-2 border-dashed border-[#d9d4cc] rounded-lg px-6 py-5 flex items-center justify-center text-gray-500 hover:border-[#2854c5] hover:text-[#2854c5] transition-colors cursor-pointer"
+              className="border-2 border-dashed border-[#d9d4cc] rounded-lg px-6 py-5 flex items-center justify-center text-gray-500 hover:border-[#2854c5] hover:text-[#2854c5] transition-colors cursor-pointer h-full"
             >
               + Add Program
             </button>

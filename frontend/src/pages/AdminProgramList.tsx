@@ -100,10 +100,10 @@ export default function AdminProgramList() {
                     </div>
 
                     {/* 卡片 Grid 列表 */}
-                    <div className="grid lg:grid-cols-2 gap-x-[40px] gap-y-[20px] w-full md:grid-cols-1">
+                    <div className="grid lg:grid-cols-2 gap-x-[40px] gap-y-[20px] w-full md:grid-cols-1 auto-rows-fr">
                         {data.map((prog) => (
-                            <div key={prog.id} className="bg-white border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center gap-[10px] w-full min-h-[126px]">
-                                <div className="flex flex-col items-start gap-[5px] flex-1 justify-center">
+                            <div key={prog.id} className="bg-white border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center gap-[10px] w-full min-h-[126px] h-full">
+                                <div className="flex flex-col items-start gap-[5px] flex-1 justify-center h-full">
                                     <Tag 
                                         content={prog.type} 
                                         textColor="black"
@@ -124,7 +124,7 @@ export default function AdminProgramList() {
                         {/* 新增 Program 卡片 */}
                         <div 
                             onClick={() => setIsAddModalOpen(true)}
-                            className="bg-white/50 border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center justify-center w-full min-h-[126px] cursor-pointer hover:bg-gray-50 transition-colors"
+                            className="bg-white/50 border border-[#ccc] rounded-[4px] px-[30px] py-[35px] flex items-center justify-center w-full min-h-[126px] h-full cursor-pointer hover:bg-gray-50 transition-colors"
                         >
                             <div className="flex items-center gap-[6px] text-black/70 font-bold">
                                 <span className="text-[20px] leading-none mb-1">+</span>

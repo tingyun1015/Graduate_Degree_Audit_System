@@ -146,15 +146,15 @@ export default function AdminProgramDetail() {
                                 <span className="ml-3 flex items-center">{showTag(programDetail.type) && <Tag content={programDetail.type} />}</span>
                             </h1>
                         </div>
-                        <Button 
-                            content={programDetail.is_published ? "Unpublish" : "Publish"}
-                            color={programDetail.is_published ? "#bf3c32" : "#2854c5"}
+                        {!programDetail.is_published && <Button 
+                            content="Publish"
+                            color="#2854c5"
                             hasArrow={false}
                             isFullWidth={false}
                             onClick={() => {
                                 setIsPublishModalOpen(true);
                             }}
-                        />
+                        />}
                     </div>
 
                     <div className="grid lg:grid-cols-3 gap-6 w-full mb-8 md:grid-cols-1">
