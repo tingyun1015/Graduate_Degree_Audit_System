@@ -1,8 +1,8 @@
-interface AdminSidebarProps {
-    activeTab?: 'program' | 'course';
-}
+import { useLocation } from 'react-router-dom';
 
-export default function AdminSidebar({ activeTab = 'program' }: AdminSidebarProps) {
+export default function AdminSidebar() {
+    const location = useLocation();
+    const activeTab = location.pathname.includes('/admin/course') ? 'course' : 'program';
     return (
         <aside className="w-[230px] shrink-0 bg-[#fff8ef] border-r border-[#d9d9d9] flex flex-col pt-[30px] sticky top-16 h-[calc(100vh-86.5px)] overflow-y-auto self-start">
             {/* Navigation Menu */}

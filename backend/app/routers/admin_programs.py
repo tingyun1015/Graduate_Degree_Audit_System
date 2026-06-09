@@ -134,7 +134,7 @@ def list_department_programs(
     programs = db.query(Program).filter(Program.dept_id == department_id).all()
     return AdminProgramListResponse(
         success=True,
-        message="取得 program 列表成功",
+        message="Program list retrieved successfully",
         data=AdminProgramListData(programs=[_program_summary(p) for p in programs]),
     )
 
@@ -184,7 +184,7 @@ def create_department_program(
 
     return AdminProgramCreateResponse(
         success=True,
-        message="新增 program 成功",
+        message="Program created successfully",
         data=AdminProgramCreateData(program=_program_summary(program)),
     )
 
@@ -201,7 +201,7 @@ def delete_admin_program(
 
     db.delete(program)
     db.commit()
-    return AdminMessageResponse(success=True, message="刪除 program 成功")
+    return AdminMessageResponse(success=True, message="Program deleted successfully")
 
 
 # ── Publish toggle ─────────────────────────────────────────────────────────────
@@ -223,7 +223,7 @@ def set_program_published(
 
     return AdminProgramCreateResponse(
         success=True,
-        message="更新 program 發布狀態成功",
+        message="Program publish status updated successfully",
         data=AdminProgramCreateData(program=_program_summary(program)),
     )
 
@@ -240,7 +240,7 @@ def get_admin_program_requirements(
     _admin: Staff = Depends(require_admin),
 ):
     program = _load_program_with_rules(db, program_id)
-    return _requirements_response(program, "取得 program 規則成功")
+    return _requirements_response(program, "Program requirements retrieved successfully")
 
 
 @router.put("/programs/{rule_id}", response_model=AdminProgramRequirementsResponse)
@@ -254,7 +254,7 @@ def update_program_rule(
     if rule.rule_type == "core":
         raise HTTPException(
             status_code=400,
-            detail="Core rule 的學分數是由課程自動加總，無法直接編輯",
+            detail="Core rule credits are automatically calculated from courses and cannot be edited directly",
         )
 
     rule.required_credits = payload.required_credits
@@ -265,7 +265,7 @@ def update_program_rule(
     db.commit()
 
     program = _load_program_with_rules(db, program.program_id)
-    return _requirements_response(program, "更新 rule 成功")
+    return _requirements_response(program, "Rule updated successfully")
 
 
 @router.post(
@@ -283,7 +283,7 @@ def add_course_to_program_rule(
     if rule.rule_type not in ("core", "elective"):
         raise HTTPException(
             status_code=400,
-            detail="只能在 core 或 elective rule 中新增課程",
+            detail="Courses can only be added to core or elective rules",
         )
 
     course = db.query(Course).filter(Course.course_id == payload.course_id).first()
@@ -306,7 +306,7 @@ def add_course_to_program_rule(
     db.commit()
 
     program = _load_program_with_rules(db, program.program_id)
-    return _requirements_response(program, "新增課程至 rule 成功")
+    return _requirements_response(program, "Course added to rule successfully")
 
 
 @router.delete(
@@ -336,4 +336,4 @@ def remove_course_from_program_rule(
     db.commit()
 
     program = _load_program_with_rules(db, program.program_id)
-    return _requirements_response(program, "從 rule 移除課程成功")
+    return _requirements_response(program, "Course removed from rule successfully")

@@ -1,7 +1,4 @@
 import { useEffect, useState } from 'react';
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import AdminSidebar from "../components/AdminSidebar";
 import Tag from "../components/Tag";
 import Button from "../components/Button";
 import AddProgramModal from "../components/AddProgramModal";
@@ -40,13 +37,9 @@ export default function AdminProgramList() {
     }, [activeDepartment?.id]);
 
     return (
-        <div className="min-h-screen flex flex-col bg-[#fff8ef]">
-            <Header />
-            <div className="flex-1 flex w-full mx-auto">
-                <AdminSidebar activeTab="program" />
-                
-                <main className="flex-1 flex flex-col items-center pt-[50px] pb-10 px-[60px]">
-                    <div className="w-full flex items-center justify-between mb-8">
+        <>
+            <main className="flex-1 flex flex-col items-center pt-[50px] pb-10 px-[60px]">
+                    <div className="w-full flex items-center justify-between mb-8 min-h-[40px]">
                        <div className="flex items-center gap-6">
                             <div className="flex items-center gap-3">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="#23417d">
@@ -134,9 +127,6 @@ export default function AdminProgramList() {
                     </div>
 
                 </main>
-            </div>
-            
-            <Footer />
 
             <AddProgramModal 
                 isOpen={isAddModalOpen} 
@@ -144,6 +134,6 @@ export default function AdminProgramList() {
                 departmentId={Number(activeDepartment?.id)}
                 onSuccess={fetchPrograms}
             />
-        </div>
+        </>
     );
 }

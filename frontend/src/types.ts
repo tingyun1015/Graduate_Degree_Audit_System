@@ -122,6 +122,7 @@ export interface CourseResponse {
 export type CourseStatus = 'done' | 'planned' | 'missing';
 
 export interface StudentCourseRow {
+  courseId: number;
   status: CourseStatus;
   code: string;
   name: string;

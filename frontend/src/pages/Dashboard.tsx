@@ -2,8 +2,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDashboard, getAllPrograms, addStudentProgram } from '../api';
 import type { Dashboard, Program, ProgramOption } from '../types';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 import Tag from '../components/Tag';
 import Button from '../components/Button';
 import { useAuthStore } from '../store/useAuthStore';
@@ -228,13 +226,8 @@ export default function Dashboard() {
   const programCount = mainMajorPrograms.length + otherPrograms.length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fff8ef]">
-      <Header />
-
-      {/* 主內容區(置中、限制最大寬度) */}
-      <main className="flex-1 w-full mx-auto px-20 py-8 flex flex-col gap-6">
-
-        {/* ② 總覽卡片 */}
+    <>
+      {/* ② 總覽卡片 */}
         <section className="bg-white border border-[#e5e0d8] rounded-lg px-8 py-6 flex items-center justify-between flex-wrap gap-4">
           <div>
             <h2 className="text-[#1f3a5f] text-xl font-bold">{student_info.degree_type}</h2>
@@ -374,10 +367,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-      </main>
-      <Footer />
-
-      {/* + New Program 視窗 */}
+      {/* 彈跳視窗:Add Program */}
       {isModalOpen && (
         <NewProgramModal
           options={programOptions}
@@ -385,6 +375,6 @@ export default function Dashboard() {
           onCreate={handleCreate}
         />
       )}
-    </div>
+    </>
   );
 }

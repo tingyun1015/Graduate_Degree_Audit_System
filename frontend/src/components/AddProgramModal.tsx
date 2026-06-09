@@ -53,7 +53,7 @@ export default function AddProgramModal({ isOpen, onClose, departmentId, onSucce
             type="text" 
             value={programName}
             onChange={(e) => setProgramName(e.target.value)}
-            placeholder="e.g. B.S. Computer Science"
+            placeholder="e.g. BS Computer Science"
             required
             className="border border-[#ccc] rounded-[4px] px-3 py-2 text-[14px] focus:outline-none focus:border-[#2854c5]"
           />

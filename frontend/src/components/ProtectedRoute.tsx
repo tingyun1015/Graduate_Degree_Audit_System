@@ -1,12 +1,14 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
+import StudentLayout from './StudentLayout';
+import AdminLayout from './AdminLayout';
 
 export function ProtectedStudentRoute() {
   const { isLoggedIn, role } = useAuthStore();
   if (!isLoggedIn || role !== 'student') {
     return <Navigate to="/" replace />;
   }
-  return <Outlet />;
+  return <StudentLayout />;
 }
 
 export function ProtectedAdminRoute() {
@@ -14,5 +16,5 @@ export function ProtectedAdminRoute() {
   if (!isLoggedIn || role !== 'admin') {
     return <Navigate to="/admin" replace />;
   }
-  return <Outlet />;
+  return <AdminLayout />;
 }
