@@ -95,7 +95,7 @@ function NewProgramModal({
   return (
     // 半透明遮罩;點遮罩關閉,點視窗本身不關(stopPropagation)
     <div
-      className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center px-4"
+      className="fixed inset-0 z-100 bg-black/30 flex items-center justify-center px-4"
       onClick={onClose}
     >
       <div
