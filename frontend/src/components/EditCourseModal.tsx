@@ -15,7 +15,6 @@ export default function EditCourseModal({ isOpen, onClose, course, onSuccess }: 
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [credit, setCredit] = useState(3);
-  const [term, setTerm] = useState('Fall, 2025');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -23,7 +22,6 @@ export default function EditCourseModal({ isOpen, onClose, course, onSuccess }: 
       setCode(course.course_code);
       setName(course.course_name);
       setCredit(course.credits);
-      setTerm(course.term || 'Fall, 2025');
     }
   }, [course]);
 
@@ -34,13 +32,12 @@ export default function EditCourseModal({ isOpen, onClose, course, onSuccess }: 
     setIsLoading(true);
     try {
       const updatedCourse: Course = {
-        id: course.id,
+        course_id: course.course_id,
         course_code: code,
         course_name: name,
-        credits: credit,
-        term: term
+        credits: credit
       };
-      await editCourse(course.id, updatedCourse);
+      await editCourse(course.course_id, updatedCourse);
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -79,20 +76,8 @@ export default function EditCourseModal({ isOpen, onClose, course, onSuccess }: 
           </div>
         </div>
 
-        {/* Term & Credits */}
+        {/* Credits */}
         <div className="flex gap-4">
-          <div className="flex flex-col gap-2 flex-1">
-            <label className="text-[14px] font-semibold text-[#23417d]">Term</label>
-            <select 
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              className="border border-[#ccc] rounded-[4px] px-3 py-2 text-[14px] bg-white focus:outline-none focus:border-[#2854c5]"
-            >
-              <option value="Fall, 2025">Fall, 2025</option>
-              <option value="Spring, 2026">Spring, 2026</option>
-              <option value="Fall, 2026">Fall, 2026</option>
-            </select>
-          </div>
           <div className="flex flex-col gap-2 flex-1">
             <label className="text-[14px] font-semibold text-[#23417d]">Credits</label>
             <select 
@@ -106,16 +91,6 @@ export default function EditCourseModal({ isOpen, onClose, course, onSuccess }: 
               <option value={4}>4</option>
             </select>
           </div>
-        </div>
-
-        {/* Description */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[14px] font-semibold text-[#23417d]">Description</label>
-          <textarea 
-            rows={4}
-            placeholder="Enter course description..."
-            className="border border-[#ccc] rounded-[4px] px-3 py-2 text-[14px] focus:outline-none focus:border-[#2854c5] resize-none"
-          ></textarea>
         </div>
 
         {/* Footer Actions */}

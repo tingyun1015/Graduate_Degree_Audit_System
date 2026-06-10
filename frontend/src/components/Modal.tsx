@@ -23,7 +23,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-[8px] w-full max-w-[650px] shadow-lg flex flex-col m-4">
         <div className="flex justify-between items-center px-[30px] py-[20px] border-b border-gray-100">
           <h2 className="text-[#23417d] font-bold text-[18px]">{title}</h2>
