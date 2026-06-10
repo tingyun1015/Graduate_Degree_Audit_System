@@ -34,6 +34,7 @@ from ..student_schemas import (
 from ..student_service import (
     build_program_sub_rules,
     get_active_programs,
+    get_globally_consumed_course_ids,
     get_planned_programs,
     get_primary_program,
     get_student_with_audit_data,
@@ -139,18 +140,13 @@ def get_student_audit_all(
     program_summaries: list[ProgramAuditSummaryResponse] = []
     overall_can_graduate = True
 
+    consumed_course_ids = get_globally_consumed_course_ids(student, take_by_course)
+
     for enrollment in active_enrollments:
         program = enrollment.program
         rules_summary: list[AuditRuleSummaryResponse] = []
         program_can_graduate = True
         missing_courses: list[AuditCourseResponse] = []
-
-        consumed_course_ids = set()
-        for rule in program.requirement_rules:
-            if rule.rule_type != "free_elective":
-                for cr in rule.course_rules:
-                    if cr.course and cr.course.course_id in take_by_course:
-                        consumed_course_ids.add(cr.course.course_id)
 
         for rule in program.requirement_rules:
             earned = 0
@@ -252,12 +248,7 @@ def get_student_program_audit(
     audit_rules: list[AuditRuleResponse] = []
     program_can_graduate = True
 
-    consumed_course_ids = set()
-    for rule in program.requirement_rules:
-        if rule.rule_type != "free_elective":
-            for cr in rule.course_rules:
-                if cr.course and cr.course.course_id in take_by_course:
-                    consumed_course_ids.add(cr.course.course_id)
+    consumed_course_ids = get_globally_consumed_course_ids(student, take_by_course)
 
     for rule in program.requirement_rules:
         counted_courses: list[AuditCourseResponse] = []

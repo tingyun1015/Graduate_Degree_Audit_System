@@ -75,6 +75,28 @@ def get_program_course_ids(program: Program) -> set[int]:
     }
 
 
+def get_globally_consumed_course_ids(
+    student: Student, take_by_course: dict[int, Takes]
+) -> set[int]:
+    """Course IDs claimed by a required/core/elective rule in any program
+    the student is enrolled in (active or planned).
+
+    Shared across programs so a course already fulfilling a requirement in
+    one program isn't also counted as a "leftover" Free Elective in another.
+    """
+    consumed_course_ids: set[int] = set()
+    for enrollment in student.enrollments:
+        if not enrollment.program:
+            continue
+        for rule in enrollment.program.requirement_rules:
+            if rule.rule_type == "free_elective":
+                continue
+            for course_rule in rule.course_rules:
+                if course_rule.course and course_rule.course.course_id in take_by_course:
+                    consumed_course_ids.add(course_rule.course.course_id)
+    return consumed_course_ids
+
+
 def sum_earned_credits_for_course_ids(
     passed_course_credits: dict[int, int], course_ids: set[int]
 ) -> int:
