@@ -145,24 +145,44 @@ def get_student_audit_all(
         program_can_graduate = True
         missing_courses: list[AuditCourseResponse] = []
 
+        consumed_course_ids = set()
+        for rule in program.requirement_rules:
+            if rule.rule_type != "free_elective":
+                for cr in rule.course_rules:
+                    if cr.course and cr.course.course_id in take_by_course:
+                        consumed_course_ids.add(cr.course.course_id)
+
         for rule in program.requirement_rules:
             earned = 0
-            for cr in rule.course_rules:
-                course = cr.course
-                if not course:
-                    continue
-                take = take_by_course.get(course.course_id)
-                if take and take.is_passed:
-                    earned += course.credits
-                elif rule.rule_type in ("required", "core", "elective"):
-                    missing_courses.append(
-                        AuditCourseResponse(
-                            course_id=course.course_id,
-                            course_code=course.course_code,
-                            course_name=course.course_name,
-                            credits=course.credits,
+            if rule.rule_type == "free_elective":
+                explicit_course_ids = {cr.course_id for cr in rule.course_rules if cr.course}
+                leftover_course_ids = {
+                    cid for cid in take_by_course.keys()
+                    if cid not in consumed_course_ids and cid not in explicit_course_ids
+                }
+                all_eval_ids = explicit_course_ids.union(leftover_course_ids)
+
+                for cid in all_eval_ids:
+                    take = take_by_course.get(cid)
+                    if take and take.is_passed and take.course:
+                        earned += take.course.credits
+            else:
+                for cr in rule.course_rules:
+                    course = cr.course
+                    if not course:
+                        continue
+                    take = take_by_course.get(course.course_id)
+                    if take and take.is_passed:
+                        earned += course.credits
+                    elif rule.rule_type in ("required", "core", "elective"):
+                        missing_courses.append(
+                            AuditCourseResponse(
+                                course_id=course.course_id,
+                                course_code=course.course_code,
+                                course_name=course.course_name,
+                                credits=course.credits,
+                            )
                         )
-                    )
 
             remaining = max(0, rule.required_credits - earned)
             if remaining > 0:
@@ -232,31 +252,69 @@ def get_student_program_audit(
     audit_rules: list[AuditRuleResponse] = []
     program_can_graduate = True
 
+    consumed_course_ids = set()
+    for rule in program.requirement_rules:
+        if rule.rule_type != "free_elective":
+            for cr in rule.course_rules:
+                if cr.course and cr.course.course_id in take_by_course:
+                    consumed_course_ids.add(cr.course.course_id)
+
     for rule in program.requirement_rules:
         counted_courses: list[AuditCourseResponse] = []
         planned_courses: list[AuditCourseResponse] = []
         missing_courses: list[AuditCourseResponse] = []
         earned = 0
 
-        for course_rule in rule.course_rules:
-            course = course_rule.course
-            if not course:
-                continue
+        if rule.rule_type == "free_elective":
+            explicit_course_ids = {cr.course_id for cr in rule.course_rules if cr.course}
+            leftover_course_ids = {
+                cid for cid in take_by_course.keys()
+                if cid not in consumed_course_ids and cid not in explicit_course_ids
+            }
+            all_eval_ids = explicit_course_ids.union(leftover_course_ids)
 
-            course_response = AuditCourseResponse(
-                course_id=course.course_id,
-                course_code=course.course_code,
-                course_name=course.course_name,
-                credits=course.credits,
-            )
-            take = take_by_course.get(course.course_id)
-            if take and take.is_passed:
-                counted_courses.append(course_response)
-                earned += course.credits
-            elif take:
-                planned_courses.append(course_response)
-            elif rule.rule_type in ("required", "core", "elective"):
-                missing_courses.append(course_response)
+            for cid in all_eval_ids:
+                take = take_by_course.get(cid)
+                if take:
+                    course = take.course
+                else:
+                    course = next((cr.course for cr in rule.course_rules if cr.course_id == cid), None)
+                
+                if not course:
+                    continue
+
+                course_response = AuditCourseResponse(
+                    course_id=course.course_id,
+                    course_code=course.course_code,
+                    course_name=course.course_name,
+                    credits=course.credits,
+                )
+
+                if take and take.is_passed:
+                    counted_courses.append(course_response)
+                    earned += course.credits
+                elif take:
+                    planned_courses.append(course_response)
+        else:
+            for course_rule in rule.course_rules:
+                course = course_rule.course
+                if not course:
+                    continue
+
+                course_response = AuditCourseResponse(
+                    course_id=course.course_id,
+                    course_code=course.course_code,
+                    course_name=course.course_name,
+                    credits=course.credits,
+                )
+                take = take_by_course.get(course.course_id)
+                if take and take.is_passed:
+                    counted_courses.append(course_response)
+                    earned += course.credits
+                elif take:
+                    planned_courses.append(course_response)
+                elif rule.rule_type in ("required", "core", "elective"):
+                    missing_courses.append(course_response)
 
         remaining = max(0, rule.required_credits - earned)
         if remaining > 0:
