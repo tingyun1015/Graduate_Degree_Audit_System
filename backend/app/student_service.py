@@ -127,10 +127,12 @@ def build_program_sub_rules(
         rule_course_ids = {course_rule.course_id for course_rule in rule.course_rules}
 
         if rule.rule_type == "free_elective":
-            leftover_course_ids = {
-                course_id for course_id in passed_course_credits.keys()
-                if course_id not in consumed_course_ids and course_id not in rule_course_ids
-            }
+            leftover_course_ids = set()
+            if rule.required_credits > 0:
+                leftover_course_ids = {
+                    course_id for course_id in passed_course_credits.keys()
+                    if course_id not in consumed_course_ids and course_id not in rule_course_ids
+                }
             earned_credits = sum_earned_credits_for_course_ids(
                 passed_course_credits, rule_course_ids | leftover_course_ids
             )

@@ -152,10 +152,12 @@ def get_student_audit_all(
             earned = 0
             if rule.rule_type == "free_elective":
                 explicit_course_ids = {cr.course_id for cr in rule.course_rules if cr.course}
-                leftover_course_ids = {
-                    cid for cid in take_by_course.keys()
-                    if cid not in consumed_course_ids and cid not in explicit_course_ids
-                }
+                leftover_course_ids = set()
+                if rule.required_credits > 0:
+                    leftover_course_ids = {
+                        cid for cid in take_by_course.keys()
+                        if cid not in consumed_course_ids and cid not in explicit_course_ids
+                    }
                 all_eval_ids = explicit_course_ids.union(leftover_course_ids)
 
                 for cid in all_eval_ids:
@@ -258,10 +260,12 @@ def get_student_program_audit(
 
         if rule.rule_type == "free_elective":
             explicit_course_ids = {cr.course_id for cr in rule.course_rules if cr.course}
-            leftover_course_ids = {
-                cid for cid in take_by_course.keys()
-                if cid not in consumed_course_ids and cid not in explicit_course_ids
-            }
+            leftover_course_ids = set()
+            if rule.required_credits > 0:
+                leftover_course_ids = {
+                    cid for cid in take_by_course.keys()
+                    if cid not in consumed_course_ids and cid not in explicit_course_ids
+                }
             all_eval_ids = explicit_course_ids.union(leftover_course_ids)
 
             for cid in all_eval_ids:

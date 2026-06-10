@@ -1,6 +1,7 @@
 export interface SubRule {
   rule_name: string;
   earned: number;
+  planned: number;
   required: number;
 }
 
@@ -132,6 +133,7 @@ export interface StudentCourseRow {
 
 export interface StudentProgramRule {
   name: string;
+  rule_type: string;
   earned: number;
   required: number;
   courses: StudentCourseRow[];

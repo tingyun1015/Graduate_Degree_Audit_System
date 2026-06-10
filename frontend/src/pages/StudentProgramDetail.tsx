@@ -38,18 +38,42 @@ const STATUS_META: Record<
 // ─────────────────────────────────────────────
 // 小元件:單一圓環(實心圈 + 中央分數 + 下方標籤)
 // ─────────────────────────────────────────────
-function Ring({ value, label, muted = false }: { value: string; label: string; muted?: boolean }) {
+function Ring({ earned, planned, required, label, muted = false }: { earned: number; planned: number; required: number; label: string; muted?: boolean }) {
+  const earnedPercent = required > 0 ? Math.min(100, (earned / required) * 100) : 0;
+  const plannedPercent = required > 0 ? Math.min(100, ((earned + planned) / required) * 100) : 0;
+  const radius = 35;
+  const circ = 2 * Math.PI * radius;
+  const earnedOffset = circ - (earnedPercent / 100) * circ;
+  const plannedOffset = circ - (plannedPercent / 100) * circ;
+
   return (
-    <div className="flex flex-col items-center gap-2.5 w-20 shrink-0">
-      <div
-        className="w-20 h-20 rounded-full border-8 flex items-center justify-center"
-        style={{ borderColor: muted ? '#d9d9d9' : '#23417d' }}
-      >
-        <span className="text-[13px] font-bold" style={{ color: muted ? '#999999' : '#000000' }}>
-          {value}
+    <div className="flex flex-col items-center gap-2.5 shrink-0">
+      <div className="relative w-20 h-20">
+        <svg width="80" height="80" className="-rotate-90">
+          <circle cx="40" cy="40" r={radius} fill="none" stroke={muted ? "#d9d9d9" : "#e5e0d8"} strokeWidth="8" />
+          {!muted && (
+            <circle
+              cx="40" cy="40" r={radius} fill="none" stroke="#BF3C32" strokeWidth="8"
+              strokeDasharray={circ} strokeDashoffset={plannedOffset} strokeLinecap="round"
+            />
+          )}
+          {!muted && (
+            <circle
+              cx="40" cy="40" r={radius} fill="none" stroke="#2854c5" strokeWidth="8"
+              strokeDasharray={circ} strokeDashoffset={earnedOffset} strokeLinecap="round"
+            />
+          )}
+        </svg>
+        <span className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-[13px] font-bold leading-none" style={{ color: muted ? '#999999' : '#000000', marginTop: muted ? '0' : '4px' }}>
+            {muted ? '-' : `${earned}/${required}`}
+          </span>
+          {!muted && planned > 0 && (
+            <span className="text-[10px] font-semibold text-gray-500 leading-none mt-1">+{planned}</span>
+          )}
         </span>
       </div>
-      <span className="text-[10.8px] text-black text-center">{label}</span>
+      <span className="text-[10.8px] text-black text-center max-w-[80px] break-words leading-tight">{label}</span>
     </div>
   );
 }
@@ -163,12 +187,23 @@ function ProgramSummaryCard({ detail }: { detail: StudentProgramDetailData }) {
 
       {/* 圓環:每個 rule 一個。required 為 0 時顯示灰色「-」 */}
       <div className="flex flex-wrap gap-x-3 gap-y-4 justify-between">
-        {detail.rules.map((rule) => {
+        {[...detail.rules].sort((a, b) => {
+          const orderMap: Record<string, number> = {
+            core: 1,
+            required: 1,
+            elective: 2,
+            free_elective: 3,
+          };
+          return (orderMap[a.rule_type] || 4) - (orderMap[b.rule_type] || 4);
+        }).map((rule) => {
           const hasReq = rule.required > 0;
+          const planned = rule.courses.filter(c => c.status === 'planned').reduce((sum, c) => sum + Number(c.credits), 0);
           return (
             <Ring
               key={rule.name}
-              value={hasReq ? `${rule.earned}/${rule.required}` : '-'}
+              earned={rule.earned}
+              planned={planned}
+              required={rule.required}
               label={rule.name}
               muted={!hasReq}
             />
@@ -282,6 +317,7 @@ function auditToDetail(audit: Audit, isEnrolled: boolean): StudentProgramDetailD
     isEnrolled,
     rules: audit.rules.map((rule) => ({
       name: rule.rule_name,
+      rule_type: rule.rule_type,
       earned: rule.earned_credits,
       required: rule.required_credits,
       courses: [
@@ -448,9 +484,18 @@ export default function StudentProgramDetail() {
 
           {/* 右欄(伸縮) */}
           <div className="flex-1 flex flex-col gap-4">
-            {/* 只顯示有學分要求的 rule 卡，或是你有其他的過濾邏輯 */}
+            {/* 只顯示有學分要求的 rule 卡，並依序由 core -> elective -> free 排序 */}
             {detail?.rules
-              .filter((rule) => rule.required > 0 || rule.courses.length > 0)
+              .filter((rule) => rule.required > 0)
+              .sort((a, b) => {
+                const orderMap: Record<string, number> = {
+                  core: 1,
+                  required: 1,
+                  elective: 2,
+                  free_elective: 3,
+                };
+                return (orderMap[a.rule_type] || 4) - (orderMap[b.rule_type] || 4);
+              })
               .map((rule) => (
                 <RuleCard
                   key={rule.name}

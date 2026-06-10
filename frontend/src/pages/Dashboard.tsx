@@ -4,7 +4,9 @@ import { getDashboard, getAllPrograms, addStudentProgram } from '../api';
 import type { Dashboard, Program, ProgramOption } from '../types';
 import Tag from '../components/Tag';
 import Button from '../components/Button';
+import Modal from '../components/Modal';
 import { useAuthStore } from '../store/useAuthStore';
+import { useToastStore } from '../store/useToastStore';
 
 // ─────────────────────────────────────────────
 // 小工具:算出單一 program 的 earned / required 總和
@@ -93,60 +95,39 @@ function NewProgramModal({
   const [selectedId, setSelectedId] = useState<number | ''>('');
 
   return (
-    // 半透明遮罩;點遮罩關閉,點視窗本身不關(stopPropagation)
-    <div
-      className="fixed inset-0 z-100 bg-black/30 flex items-center justify-center px-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-[640px] p-7"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 標題列 */}
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold text-[#1f3a5f]">+ New Program</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 text-xl leading-none cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-
+    <Modal isOpen={true} onClose={onClose} title="+ New Program">
+      <div className="flex flex-col gap-4">
         {/* 下拉:可加入的 program */}
-        <label className="block text-sm text-gray-600 mb-1.5">Select Program</label>
-        <select
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value ? Number(e.target.value) : '')}
-          className="w-full h-11 border border-[#d9d4cc] rounded px-3 text-sm bg-white focus:outline-none focus:border-[#2854c5] transition-colors"
-        >
-          <option value="">
-            {options.length ? '— Select —' : 'No available programs to join'}
-          </option>
-          {options.map((p) => (
-            <option key={p.program_id} value={p.program_id}>
-              {p.program_name}
-              {p.program_type ? ` (${p.program_type})` : ''}
+        <div>
+          <label className="block text-sm font-semibold text-[#23417d] mb-1.5">Select Program</label>
+          <select
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value ? Number(e.target.value) : '')}
+            className="w-full h-11 border border-[#ccc] rounded px-3 text-sm bg-white focus:outline-none focus:border-[#2854c5] transition-colors"
+          >
+            <option value="">
+              {options.length ? '— Select —' : 'No available programs to join'}
             </option>
-          ))}
-        </select>
+            {options.map((p) => (
+              <option key={p.program_id} value={p.program_id}>
+                {p.program_name}
+                {p.program_type ? ` (${p.program_type})` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* Create */}
-        <div className="flex justify-end mt-8">
-          <button
+        <div className="flex justify-end mt-4">
+          <Button
+            content="Create"
+            color="#2854c5"
             onClick={() => selectedId !== '' && onCreate(selectedId)}
             disabled={selectedId === ''}
-            className={`text-white text-sm font-semibold rounded px-6 py-2 ${
-              selectedId !== ''
-                ? 'bg-[#2854c5] hover:bg-[#1f43a0] cursor-pointer'
-                : 'bg-[#d9d9d9] cursor-not-allowed'
-            }`}
-          >
-            Create
-          </button>
+          />
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -159,6 +140,7 @@ export default function Dashboard() {
   const [programOptions, setProgramOptions] = useState<ProgramOption[]>([]);
 
   const { userId: studentId } = useAuthStore();
+  const showToast = useToastStore((state) => state.showToast);
 
   const loadDashboard = () => {
     getDashboard(studentId!)
@@ -189,7 +171,7 @@ export default function Dashboard() {
       setModalOpen(true);
     } catch (err) {
       console.error(err);
-      window.alert('無法取得可加入的 program');
+      showToast('無法取得可加入的 program', 'error');
     }
   };
 
@@ -197,15 +179,12 @@ export default function Dashboard() {
   const handleCreate = async (programId: number) => {
     try {
       const res = await addStudentProgram(studentId, programId);
-      if (!res.success) {
-        window.alert(res.message || '加入失敗');
-        return;
-      }
       setModalOpen(false);
+      showToast('Program added successfully', 'success');
       loadDashboard();
     } catch (err) {
       console.error(err);
-      window.alert('加入 program 失敗,請稍後再試');
+      showToast('加入 program 失敗,請稍後再試', 'error');
     }
   };
 
