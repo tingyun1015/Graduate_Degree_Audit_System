@@ -424,7 +424,7 @@ def get_student_enrollments(student_id: int, db: Session = Depends(get_db)):
     ]
 
 
-@router.post("/enrollments", response_model=StudentActionResponse, status_code=201)
+@router.post("/enrollments", response_model=EnrollmentItemResponse, status_code=201)
 def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.student_id == payload.student_id).first()
     if not student:
@@ -454,7 +454,12 @@ def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_d
     ))
     db.commit()
 
-    return StudentActionResponse(success=True, message="Enrollment created successfully.")
+    return EnrollmentItemResponse(
+        program_id=program.program_id,
+        program_name=program.program_name,
+        program_type=program.program_type,
+        is_enrolled=False,
+    )
 
 
 @router.delete("/enrollments/{program_id}", response_model=StudentActionResponse)
