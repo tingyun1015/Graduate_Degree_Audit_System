@@ -34,6 +34,7 @@ from ..student_schemas import (
 from ..student_service import (
     build_program_sub_rules,
     get_active_programs,
+    get_consumed_course_ids,
     get_planned_programs,
     get_primary_program,
     get_student_with_audit_data,
@@ -65,7 +66,7 @@ def get_student_dashboard_all(student_id: int, db: Session = Depends(get_db)):
 
     programs = []
     for program in active_programs + planned_programs:
-        sub_rules, _ = build_program_sub_rules(program, passed_course_credits)
+        sub_rules, _ = build_program_sub_rules(program, student, passed_course_credits)
 
         is_main_major = bool(
             is_main_major_program(student, program)
@@ -145,12 +146,7 @@ def get_student_audit_all(
         program_can_graduate = True
         missing_courses: list[AuditCourseResponse] = []
 
-        consumed_course_ids = set()
-        for rule in program.requirement_rules:
-            if rule.rule_type != "free_elective":
-                for cr in rule.course_rules:
-                    if cr.course and cr.course.course_id in take_by_course:
-                        consumed_course_ids.add(cr.course.course_id)
+        consumed_course_ids = get_consumed_course_ids(program, student, set(take_by_course.keys()))
 
         for rule in program.requirement_rules:
             earned = 0
@@ -252,12 +248,7 @@ def get_student_program_audit(
     audit_rules: list[AuditRuleResponse] = []
     program_can_graduate = True
 
-    consumed_course_ids = set()
-    for rule in program.requirement_rules:
-        if rule.rule_type != "free_elective":
-            for cr in rule.course_rules:
-                if cr.course and cr.course.course_id in take_by_course:
-                    consumed_course_ids.add(cr.course.course_id)
+    consumed_course_ids = get_consumed_course_ids(program, student, set(take_by_course.keys()))
 
     for rule in program.requirement_rules:
         counted_courses: list[AuditCourseResponse] = []
@@ -433,7 +424,7 @@ def get_student_enrollments(student_id: int, db: Session = Depends(get_db)):
     ]
 
 
-@router.post("/enrollments", response_model=StudentActionResponse, status_code=201)
+@router.post("/enrollments", response_model=EnrollmentItemResponse, status_code=201)
 def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_db)):
     student = db.query(Student).filter(Student.student_id == payload.student_id).first()
     if not student:
@@ -463,7 +454,12 @@ def add_enrollment(payload: EnrollmentCreateRequest, db: Session = Depends(get_d
     ))
     db.commit()
 
-    return StudentActionResponse(success=True, message="Enrollment created successfully.")
+    return EnrollmentItemResponse(
+        program_id=program.program_id,
+        program_name=program.program_name,
+        program_type=program.program_type,
+        is_enrolled=False,
+    )
 
 
 @router.delete("/enrollments/{program_id}", response_model=StudentActionResponse)
