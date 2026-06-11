@@ -263,32 +263,21 @@ class Enrollment(Base):
 class Takes(Base):
     __tablename__ = "takes"
 
-    # Surrogate PK so the same student can retake a course in a different semester
-    take_id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True
-    )
     student_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("students.student_id", ondelete="CASCADE"),
-        nullable=False,
+        primary_key=True,
     )
     course_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("courses.course_id", ondelete="CASCADE"),
-        nullable=False,
+        primary_key=True,
     )
     # e.g. "2024-1" / "2024-2"  – semester identifier
-    semester: Mapped[str] = mapped_column(String(20), nullable=False)
+    semester: Mapped[str] = mapped_column(String(20), primary_key=True)
     # 0–100 integer score; NULL while grade is not yet issued
     grade: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     is_passed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-
-    __table_args__ = (
-        # Prevent duplicate records for the same (student, course, semester)
-        UniqueConstraint(
-            "student_id", "course_id", "semester", name="uq_takes_student_course_sem"
-        ),
-    )
 
     # ── relationships ──────────────────────────────────────
     student: Mapped["Student"] = relationship("Student", back_populates="takes")
