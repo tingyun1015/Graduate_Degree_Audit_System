@@ -21,7 +21,7 @@ function CourseRow({ course, ruleId, onRemove }: { course: Course, ruleId: numbe
             <div className="flex items-center gap-5">
                 <span className="text-[12px] text-black">{course.credits} cr</span>
                 <button 
-                    onClick={() => onRemove(ruleId, course.id, course.course_code, course.course_name)}
+                    onClick={() => onRemove(ruleId, course.course_id, course.course_code, course.course_name)}
                     className="text-[12px] text-[#bf3c32] underline decoration-solid hover:text-red-700 transition-colors cursor-pointer"
                 >
                     remove
@@ -303,6 +303,16 @@ export default function AdminProgramDetail() {
                     fetchProgramData();
                 }}
                 onError={(msg) => showToast(msg, "error")}
+                onValidate={(newCredits) => {
+                    const rule = programRules.find(r => r.id === selectedRuleId);
+                    if (rule) {
+                        const totalCourseCredits = rule.courses?.reduce((sum, c) => sum + Number(c.credits), 0) || 0;
+                        if (newCredits > totalCourseCredits) {
+                            return `Required credits (${newCredits}) cannot exceed the total credits of courses (${totalCourseCredits}).`;
+                        }
+                    }
+                    return null;
+                }}
             />
 
             <EditProgramRuleModal

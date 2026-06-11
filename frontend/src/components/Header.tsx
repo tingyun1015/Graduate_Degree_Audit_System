@@ -43,7 +43,7 @@ export default function Header() {
     };
 
     return (
-        <header className="bg-[#1f3a5f] text-white flex items-center justify-between px-8 h-16 shrink-0 sticky top-0 z-50">
+        <header className="bg-[#1f3a5f] text-white flex items-center justify-between px-8 h-16 shrink-0 sticky top-0 z-[50]">
             <div className="flex items-center gap-2">
                 <Logo className="text-white fill-current" />
                 {isAdmin && <Tag content='Admin/Staff' color="#ffb6b0" textColor="#2a2a2a" />}

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 export type ToastType = 'success' | 'error' | 'info';
 
@@ -23,8 +24,8 @@ export default function Toast({ message, type = 'info', onClose, duration = 1500
     info: 'bg-blue-500',
   }[type];
 
-  return (
-    <div className={`fixed gap-2 bottom-10 right-5 text-white px-6 py-3 rounded-lg shadow-lg flex items-center justify-between z-50 animate-fade-in ${bgColor}`}>
+  return createPortal(
+    <div className={`fixed gap-2 bottom-10 right-5 text-white px-6 py-3 rounded-lg shadow-lg flex items-center justify-between z-[150] animate-fade-in ${bgColor}`}>
         {type == 'success' && (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -43,6 +44,7 @@ export default function Toast({ message, type = 'info', onClose, duration = 1500
           </svg>
         )}
       <span className="text-[14px] font-medium">{message}</span>
-    </div>
+    </div>,
+    document.body
   );
 }

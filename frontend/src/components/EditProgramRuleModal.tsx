@@ -11,9 +11,10 @@ interface EditProgramRuleModalProps {
   currentCredits: number;
   onSuccess?: () => void;
   onError?: (msg: string) => void;
+  onValidate?: (newCredits: number) => string | null;
 }
 
-export default function EditProgramRuleModal({ isOpen, onClose, ruleId, currentCredits, onSuccess, onError }: EditProgramRuleModalProps) {
+export default function EditProgramRuleModal({ isOpen, onClose, ruleId, currentCredits, onSuccess, onError, onValidate }: EditProgramRuleModalProps) {
   const [credits, setCredits] = useState(currentCredits);
   const [isLoading, setIsLoading] = useState(false);
   const { userId } = useAuthStore();
@@ -25,6 +26,15 @@ export default function EditProgramRuleModal({ isOpen, onClose, ruleId, currentC
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ruleId || !userId) return;
+
+    if (onValidate) {
+      const errorMsg = onValidate(credits);
+      if (errorMsg) {
+        if (onError) onError(errorMsg);
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       await editAdminProgramRule(Number(userId), Number(ruleId), Number(credits));
