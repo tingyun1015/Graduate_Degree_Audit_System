@@ -55,18 +55,22 @@ ADMIN_DEPT_ID=1
 
 - `pure-read.js`
   100% 讀取型 workload。只打 student 與 catalog 讀取 API，觀察查詢延遲與吞吐量。
+  目前設定大約會送出 3000 個 requests。
 
 - `pure-write.js`
   100% 寫入型 workload。執行 student enrollment / planned course 與 admin program create-publish-delete，並在每輪清理資料。
   每個 VU 固定對應一個不同的 student，避免互相搶同一筆 enrollment 或 planned course。
+  目前設定大約會送出 3000 個 requests。
 
 - `read-heavy.js`
   讀多寫少 workload。大部分流量都在 dashboard / audit / programs 讀取，少量穿插 enrollment 寫入與刪除。
   少量寫入同樣採每個 VU 對應不同 student 的方式，降低資料衝突。
+  目前設定大約會送出 3000 個 requests。
 
 - `write-heavy.js`
   讀少寫多 workload。以 enrollment、planned course、admin program 建立與刪除為主，只保留少量 dashboard 讀取。
   每個 VU 固定對應一個不同的 student，避免純寫情境下互撞。
+  目前設定大約會送出 3000 個 requests。
 
 ## 執行範例
 

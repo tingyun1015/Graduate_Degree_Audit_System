@@ -12,14 +12,10 @@ import {
 export const options = {
   scenarios: {
     pure_read: {
-      executor: "ramping-vus",
-      startVUs: 1,
-      stages: [
-        { duration: "30s", target: 5 },
-        { duration: "1m", target: 15 },
-        { duration: "30s", target: 0 },
-      ],
-      gracefulRampDown: "10s",
+      executor: "shared-iterations",
+      vus: 12,
+      iterations: 375,
+      maxDuration: "3m",
     },
   },
   thresholds: {

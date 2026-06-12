@@ -14,14 +14,10 @@ import {
 export const options = {
   scenarios: {
     read_heavy: {
-      executor: "ramping-vus",
-      startVUs: 1,
-      stages: [
-        { duration: "30s", target: 5 },
-        { duration: "1m", target: 12 },
-        { duration: "30s", target: 0 },
-      ],
-      gracefulRampDown: "10s",
+      executor: "shared-iterations",
+      vus: 12,
+      iterations: 681,
+      maxDuration: "3m",
     },
   },
   thresholds: {

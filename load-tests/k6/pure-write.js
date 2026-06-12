@@ -14,9 +14,9 @@ export const options = {
   scenarios: {
     pure_write: {
       executor: "per-vu-iterations",
-      vus: 3,
-      iterations: 4,
-      maxDuration: "2m",
+      vus: 4,
+      iterations: 107,
+      maxDuration: "10m",
     },
   },
   thresholds: {

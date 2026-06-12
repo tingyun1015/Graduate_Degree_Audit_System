@@ -16,8 +16,8 @@ export const options = {
     write_heavy: {
       executor: "per-vu-iterations",
       vus: 4,
-      iterations: 4,
-      maxDuration: "2m",
+      iterations: 94,
+      maxDuration: "10m",
     },
   },
   thresholds: {
